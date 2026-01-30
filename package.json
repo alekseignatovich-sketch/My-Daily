@@ -1,0 +1,7 @@
+{
+  "name": "my-daily",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx serve@14 -p $PORT"
+  }
+}
