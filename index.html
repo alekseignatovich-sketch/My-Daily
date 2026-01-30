@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Твой стиль — оставляем как есть, чтобы не удлинять */
         :root { --bg: #fdf6f6; --card: #ffffff; --accent: #ff6b6b; --text: #2c2c2c; }
         body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
         header { padding:18px; background:linear-gradient(135deg,#ffeef4,#fff5e6); font-family:'Permanent Marker',cursive; font-size:2.3rem; text-align:center; color:#e74c3c; text-shadow:3px 3px 0 #fff; }
@@ -62,28 +61,40 @@
 <button class="add-btn" onclick="addTask()" style="display:none;">+</button>
 
 <script>
-    // Supabase — только один раз
-    const supabaseUrl = 'https://qkhvvrwccubbufffiary.supabase.co';
-    const supabaseKey = 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';
-    const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
+    // === Supabase — только один раз ===
+    const SUPABASE_URL = 'https://qkhvvrwccubbufffiary.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';
+
+    // Глобальный клиент, чтобы не было дублирования
+    let supabase = window.supabaseClient;
+    if (!supabase) {
+        supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        window.supabaseClient = supabase;
+        console.log("Supabase клиент создан успешно");
+    } else {
+        console.log("Supabase клиент уже существует");
+    }
 
     let currentDate = new Date();
     let currentTaskIndex = 0;
     let currentPhone = null;
 
-    function formatDateKey(d = currentDate) { return d.toISOString().split('T')[0]; }
+    function formatDateKey(d = currentDate) {
+        return d.toISOString().split('T')[0];
+    }
 
     async function loginWithPhone() {
-        console.log("Кнопка нажата");
+        console.log("=== Кнопка Войти нажата ===");
         const phoneInput = document.getElementById('phone').value.trim();
-        if (!phoneInput) return alert("Введите номер");
+        if (!phoneInput) return alert("Введите номер телефона");
 
         let phone = phoneInput.replace(/\D/g, '');
         if (phone.startsWith('8')) phone = '7' + phone.slice(1);
         phone = '+' + phone;
 
-        console.log("Нормализованный номер:", phone);
+        console.log("Номер для входа:", phone);
 
+        // Проверка существования пользователя
         let { data: user, error } = await supabase
             .from('users')
             .select('phone')
@@ -91,37 +102,208 @@
             .single();
 
         if (error && error.code !== 'PGRST116') {
-            console.error("Ошибка Supabase:", error);
-            alert("Ошибка: " + error.message);
+            console.error("Ошибка Supabase при проверке:", error);
+            alert("Ошибка подключения: " + error.message);
             return;
         }
 
         if (!user) {
+            console.log("Пользователь не найден — создаём нового");
             const { error: insertError } = await supabase.from('users').insert({ phone });
             if (insertError) {
-                console.error("Ошибка создания:", insertError);
-                alert("Ошибка создания: " + insertError.message);
+                console.error("Ошибка создания пользователя:", insertError);
+                alert("Не удалось создать аккаунт: " + insertError.message);
                 return;
             }
             alert("Создан новый аккаунт!");
+        } else {
+            console.log("Пользователь найден");
         }
 
         currentPhone = phone;
+        console.log("Успешный вход для:", phone);
+
         document.getElementById('login').style.display = 'none';
         document.querySelector('.main').style.display = 'flex';
         document.querySelector('.add-btn').style.display = 'block';
 
-        console.log("Вход успешен, загружаем данные...");
-        loadDates();
-        loadDate(currentDate);
+        await loadDates();
+        await loadDate(currentDate);
     }
 
-    // ... (остальные функции loadDates, loadDate, editTask, addTask — как в предыдущем сообщении, они уже правильные)
+    async function loadDates() {
+        console.log("Загрузка списка дат...");
+        const container = document.getElementById('dateList');
+        container.innerHTML = '';
 
-    // Привязываем кнопку
-    document.getElementById('loginBtn').addEventListener('click', loginWithPhone);
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('date_key')
+            .eq('phone', currentPhone)
+            .order('date_key');
 
-    console.log("Страница загружена — приложение готово");
+        if (error) {
+            console.error("Ошибка загрузки дат:", error);
+            return;
+        }
+
+        const dates = new Set(data.map(row => row.date_key));
+        for (let i = -14; i <= 14; i++) {
+            const d = new Date(); d.setDate(d.getDate() + i);
+            dates.add(formatDateKey(d));
+        }
+
+        [...dates].sort().forEach(str => {
+            const d = new Date(str);
+            const item = document.createElement('div');
+            item.className = 'date-item';
+            item.textContent = d.toLocaleDateString('ru', {weekday:'short', day:'numeric', month:'short'});
+            if (str === formatDateKey(currentDate)) item.classList.add('selected');
+            if (str === formatDateKey(new Date())) item.classList.add('today');
+            item.onclick = () => { currentDate = d; currentTaskIndex = 0; loadDate(d); loadDates(); };
+            container.appendChild(item);
+        });
+        console.log("Даты загружены");
+    }
+
+    async function loadDate(date) {
+        console.log("Загрузка дня:", formatDateKey(date));
+        currentDate = date;
+        const key = formatDateKey();
+        document.getElementById('dateTitle').textContent = date.toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
+
+        const { data: tasksData, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('phone', currentPhone)
+            .eq('date_key', key)
+            .order('created_at');
+
+        if (error) {
+            console.error("Ошибка загрузки задач:", error);
+            return;
+        }
+
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+
+        if (tasksData.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:#aaa;font-size:1.5rem;padding:120px 0">Пока задач нет 😌</div>';
+            console.log("День пустой");
+            return;
+        }
+
+        console.log("Найдено задач:", tasksData.length);
+
+        tasksData.forEach((t, i) => {
+            const taskEl = document.createElement('div');
+            taskEl.className = 'task';
+            if (i === currentTaskIndex) taskEl.classList.add('active');
+
+            const del = document.createElement('button');
+            del.className = 'delete-btn';
+            del.textContent = '×';
+            del.onclick = async e => {
+                e.stopPropagation();
+                if (!confirm('Удалить задачу?')) return;
+                await supabase.from('tasks').delete().eq('id', t.id);
+                if (currentTaskIndex >= tasksData.length - 1 && currentTaskIndex > 0) currentTaskIndex--;
+                loadDate(currentDate);
+                loadDates();
+            };
+            taskEl.appendChild(del);
+
+            const textSpan = document.createElement('div');
+            textSpan.className = 'task-text';
+            textSpan.textContent = t.text;
+            if (t.text.length > 50) textSpan.classList.add('long');
+            if (t.text.length > 100) textSpan.classList.add('very-long');
+
+            textSpan.onclick = e => {
+                e.stopPropagation();
+                editTask(textSpan, t);
+            };
+
+            const status = document.createElement('div');
+            status.className = 'task-status';
+            if (t.completed) {
+                status.textContent = '👍';
+            } else {
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = false;
+                cb.style.width = '40px';
+                cb.style.height = '40px';
+                cb.style.accentColor = '#ff6b6b';
+                cb.onchange = async () => {
+                    await supabase.from('tasks').update({ completed: true }).eq('id', t.id);
+                    loadDate(currentDate);
+                };
+                status.appendChild(cb);
+            }
+
+            taskEl.append(textSpan, status);
+            list.appendChild(taskEl);
+        });
+
+        setTimeout(() => {
+            const active = list.querySelector('.task.active');
+            if (active) active.scrollIntoView({behavior:'smooth', block:'center'});
+        }, 200);
+    }
+
+    async function editTask(el, task) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = task.text;
+        input.style = 'flex:1; font:inherit; font-size:inherit; width:100%; border:none; outline:none; background:transparent; padding:0;';
+
+        input.onblur = async () => {
+            const newText = input.value.trim();
+            if (newText) {
+                await supabase.from('tasks').update({ text: newText }).eq('id', task.id);
+            } else {
+                await supabase.from('tasks').delete().eq('id', task.id);
+            }
+            loadDate(currentDate);
+            loadDates();
+        };
+
+        input.onkeydown = e => {
+            if (e.key === 'Enter') input.blur();
+            if (e.key === 'Escape') { input.value = task.text; input.blur(); }
+        };
+
+        el.replaceWith(input);
+        input.focus();
+        input.select();
+    }
+
+    async function addTask() {
+        const text = prompt('Новая задача:')?.trim();
+        if (!text) return;
+
+        const { error } = await supabase.from('tasks').insert({
+            phone: currentPhone,
+            date_key: formatDateKey(),
+            text,
+            completed: false
+        });
+
+        if (error) alert("Ошибка: " + error.message);
+        else {
+            currentTaskIndex = 999;
+            loadDate(currentDate);
+            loadDates();
+        }
+    }
+
+    // Привязываем кнопку после загрузки страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('loginBtn');
+        if (btn) btn.addEventListener('click', loginWithPhone);
+        console.log("Приложение готово — введите номер");
+    });
 </script>
 </body>
 </html>
