@@ -44,7 +44,7 @@
         <h2>My Daily</h2>
         <p>Введи номер телефона</p>
         <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
-        <button onclick="loginWithPhone()">Войти / Создать</button>
+        <button id="loginBtn">Войти / Создать</button>
     </div>
 </div>
 
@@ -61,6 +61,7 @@
 <button class="add-btn" onclick="addTask()" style="display:none;">+</button>
 
 <script>
+    // Supabase инициализация — только один раз
     const supabaseUrl = 'https://qkhvvrwccubbufffiary.supabase.co';
     const supabaseKey = 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';
     const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
@@ -69,7 +70,9 @@
     let currentTaskIndex = 0;
     let currentPhone = null;
 
-    function formatDateKey(d = currentDate) { return d.toISOString().split('T')[0]; }
+    function formatDateKey(d = currentDate) {
+        return d.toISOString().split('T')[0];
+    }
 
     async function loginWithPhone() {
         const phoneInput = document.getElementById('phone').value.trim();
@@ -123,8 +126,8 @@
             .order('date_key');
 
         if (error) {
-            console.error("Ошибка дат:", error);
-            return alert("Ошибка загрузки дат");
+            console.error("Ошибка загрузки дат:", error);
+            return;
         }
 
         const dates = new Set(data.map(row => row.date_key));
@@ -158,8 +161,8 @@
             .order('created_at');
 
         if (error) {
-            console.error("Ошибка задач:", error);
-            return alert("Ошибка загрузки задач");
+            console.error("Ошибка загрузки задач:", error);
+            return;
         }
 
         const list = document.getElementById('taskList');
@@ -272,6 +275,9 @@
             loadDates();
         }
     }
+
+    // Привязываем функцию к кнопке
+    document.getElementById('loginBtn').onclick = loginWithPhone;
 
     console.log("Приложение запущено — введите номер и нажмите Войти");
 </script>
