@@ -1,0 +1,23 @@
+{
+  "name": "my-daily-planner",
+  "version": "1.0.0",
+  "description": "Минималистичный ежедневник на HTML/JS с Supabase",
+  "private": true,
+  "scripts": {
+    "start": "serve -s . -l ${PORT:-8080}",
+    "build": "echo 'No build required for static site'"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "serve": "^14.2.3"
+  },
+  "keywords": [
+    "static-site",
+    "daily-planner",
+    "supabase"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
