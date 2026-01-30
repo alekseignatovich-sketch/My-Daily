@@ -3,8 +3,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python -m http.server 8000",
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
+    "startCommand": "npx serve@14 -p $PORT",
+    "restartPolicyType": "ON_FAILURE"
   }
 }
