@@ -61,12 +61,12 @@
 <button class="add-btn" onclick="addTask()" style="display:none;">+</button>
 
 <script>
-    // Supabase — объявляем только один раз
-    const SUPABASE_URL = 'https://qkhvvrwccubbufffiary.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';
+    // Supabase — берём из переменных окружения Railway (или fallback для локального запуска)
+    const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qkhvvrwccubbufffiary.supabase.co';
+    const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';
 
     const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("Supabase успешно инициализирован");
+    console.log("Supabase подключён с URL:", SUPABASE_URL);
 
     let currentDate = new Date();
     let currentTaskIndex = 0;
@@ -77,7 +77,7 @@
     }
 
     async function loginWithPhone() {
-        console.log("=== Кнопка нажата ===");
+        console.log("=== Кнопка Войти нажата ===");
         const phoneInput = document.getElementById('phone').value.trim();
         if (!phoneInput) return alert("Введите номер телефона");
 
@@ -85,7 +85,7 @@
         if (phone.startsWith('8')) phone = '7' + phone.slice(1);
         phone = '+' + phone;
 
-        console.log("Номер:", phone);
+        console.log("Номер для входа:", phone);
 
         // Проверка / создание пользователя
         let { data: user, error } = await supabase
@@ -95,19 +95,21 @@
             .single();
 
         if (error && error.code !== 'PGRST116') {
-            console.error("Ошибка проверки:", error);
-            alert("Ошибка: " + error.message);
+            console.error("Ошибка Supabase при проверке:", error);
+            alert("Ошибка подключения: " + error.message);
             return;
         }
 
         if (!user) {
             const { error: insertError } = await supabase.from('users').insert({ phone });
             if (insertError) {
-                console.error("Ошибка создания:", insertError);
-                alert("Не удалось создать: " + insertError.message);
+                console.error("Ошибка создания пользователя:", insertError);
+                alert("Не удалось создать аккаунт: " + insertError.message);
                 return;
             }
             alert("Создан новый аккаунт!");
+        } else {
+            console.log("Пользователь найден");
         }
 
         currentPhone = phone;
@@ -130,7 +132,7 @@
             .order('date_key');
 
         if (error) {
-            console.error("Ошибка дат:", error);
+            console.error("Ошибка загрузки дат:", error);
             return;
         }
 
@@ -165,7 +167,7 @@
             .order('created_at');
 
         if (error) {
-            console.error("Ошибка задач:", error);
+            console.error("Ошибка загрузки задач:", error);
             return;
         }
 
@@ -280,10 +282,12 @@
         }
     }
 
-    // Привязка кнопки
-    document.getElementById('loginBtn').addEventListener('click', loginWithPhone);
-
-    console.log("Приложение запущено — введите номер и нажмите кнопку");
+    // Привязываем кнопку после загрузки страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('loginBtn');
+        if (btn) btn.addEventListener('click', loginWithPhone);
+        console.log("Приложение готово — введите номер и нажмите кнопку");
+    });
 </script>
 </body>
 </html>
