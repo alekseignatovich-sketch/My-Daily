@@ -5,200 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Daily</title>
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg: #fdf6f6;
-            --card: #ffffff;
-            --accent: #ff6b6b;
-            --text: #2c2c2c;
-        }
-
+        :root { --bg: #fdf6f6; --card: #ffffff; --accent: #ff6b6b; --text: #2c2c2c; }
         body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
-
-        header {
-            padding:18px;
-            background:linear-gradient(135deg,#ffeef4,#fff5e6);
-            font-family:'Permanent Marker',cursive;
-            font-size:2.3rem;
-            text-align:center;
-            color:#e74c3c;
-            text-shadow:3px 3px 0 #fff;
-        }
-
+        header { padding:18px; background:linear-gradient(135deg,#ffeef4,#fff5e6); font-family:'Permanent Marker',cursive; font-size:2.3rem; text-align:center; color:#e74c3c; text-shadow:3px 3px 0 #fff; }
         .main { display:flex; height:calc(100vh - 78px); }
-
-        .dates-sidebar {
-            width:110px;
-            background:white;
-            border-right:1px solid #ffe0e0;
-            overflow-y:auto;
-            padding:14px 6px;
-        }
-
-        .date-item {
-            padding:12px 4px;
-            text-align:center;
-            cursor:pointer;
-            border-radius:12px;
-            font-size:0.92rem;
-            transition:all .2s;
-        }
-
+        .dates-sidebar { width:110px; background:white; border-right:1px solid #ffe0e0; overflow-y:auto; padding:14px 6px; }
+        .date-item { padding:12px 4px; text-align:center; cursor:pointer; border-radius:12px; font-size:0.92rem; transition:all .2s; }
         .date-item.selected { background:#ffe0e0; font-weight:bold; color:#e74c3c; }
         .date-item.today { color:var(--accent); font-weight:bold; }
-
         .tasks-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-
-        .date-title {
-            padding:16px 20px 10px;
-            font-size:1.45rem;
-            font-weight:700;
-            text-align:center;
-            background:white;
-            border-bottom:1px solid #ffd8d8;
-        }
-
-        .task-carousel {
-            flex:1;
-            overflow-y:scroll;
-            scroll-snap-type:y mandatory;
-            -webkit-overflow-scrolling:touch;
-            padding:80px 0 300px; /* ОГРОМНЫЙ нижний отступ — чтобы последняя задача могла встать ровно по центру */
-        }
-
-        .task-list {
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            gap:80px; /* большой промежуток — эффект масштаба виден даже на коротком списке */
-            width:100%;
-            max-width:440px;
-            margin:0 auto;
-        }
-
-        .task {
-            background:var(--card);
-            border-radius:24px;
-            padding:28px 32px;
-            width:88%;
-            max-width:400px;
-            box-shadow:0 6px 30px rgba(231,76,60,0.18);
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:24px;
-            position:relative;
-            scroll-snap-align:center;
-            transition:all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-            min-height:140px; /* минимальная высота — чтобы маленькие задачи тоже центрировались нормально */
-        }
-
-        .task.active {
-            transform:scale(1.24) !important;
-            box-shadow:0 18px 56px rgba(231,76,60,0.38) !important;
-            opacity:1 !important;
-        }
-
-        .task:not(.active) {
-            transform:scale(0.78);
-            opacity:0.58;
-        }
-
-        .delete-btn {
-            position:absolute;
-            top:14px;
-            right:18px;
-            background:none;
-            border:none;
-            font-size:2.1rem;
-            color:#e74c3c;
-            cursor:pointer;
-            opacity:0.85;
-            transition:all .2s;
-        }
-
+        .date-title { padding:16px 20px 10px; font-size:1.45rem; font-weight:700; text-align:center; background:white; border-bottom:1px solid #ffd8d8; }
+        .task-carousel { flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; padding:80px 0 300px; }
+        .task-list { display:flex; flex-direction:column; align-items:center; gap:80px; width:100%; max-width:440px; margin:0 auto; }
+        .task { background:var(--card); border-radius:24px; padding:28px 32px; width:88%; max-width:400px; box-shadow:0 6px 30px rgba(231,76,60,0.18); display:flex; align-items:center; justify-content:space-between; gap:24px; position:relative; scroll-snap-align:center; transition:all 0.5s cubic-bezier(0.22, 1, 0.36, 1); min-height:140px; }
+        .task.active { transform:scale(1.24) !important; box-shadow:0 18px 56px rgba(231,76,60,0.38) !important; opacity:1 !important; }
+        .task:not(.active) { transform:scale(0.78); opacity:0.58; }
+        .delete-btn { position:absolute; top:14px; right:18px; background:none; border:none; font-size:2.1rem; color:#e74c3c; cursor:pointer; opacity:0.85; transition:all .2s; }
         .delete-btn:hover { opacity:1; transform:scale(1.25); }
-
-        .task-text {
-            flex:1;
-            font-size:clamp(1.3rem, 6.2vw, 1.58rem);
-            font-weight:500;
-            line-height:1.48;
-            word-break:break-word;
-            padding-right:70px;
-            cursor:text;
-        }
-
-        .task-text.long      { font-size:clamp(1.12rem, 5.2vw, 1.35rem); }
+        .task-text { flex:1; font-size:clamp(1.3rem, 6.2vw, 1.58rem); font-weight:500; line-height:1.48; word-break:break-word; padding-right:70px; cursor:text; }
+        .task-text.long { font-size:clamp(1.12rem, 5.2vw, 1.35rem); }
         .task-text.very-long { font-size:clamp(1rem, 4.6vw, 1.2rem); }
-
-        .task-status {
-            font-size:3.4rem;
-            width:68px;
-            height:68px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            flex-shrink:0;
-        }
-
-        .add-btn {
-            position:fixed;
-            bottom:36px;
-            right:36px;
-            width:78px;
-            height:78px;
-            border-radius:50%;
-            background:var(--accent);
-            color:white;
-            font-size:3.2rem;
-            border:none;
-            box-shadow:0 12px 32px rgba(255,107,107,0.48);
-            z-index:100;
-        }
-
+        .task-status { font-size:3.4rem; width:68px; height:68px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .add-btn { position:fixed; bottom:36px; right:36px; width:78px; height:78px; border-radius:50%; background:var(--accent); color:white; font-size:3.2rem; border:none; box-shadow:0 12px 32px rgba(255,107,107,0.48); z-index:100; }
         #login { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:999; }
-        #login-form {
-            background:white;
-            padding:60px 40px;
-            border-radius:32px;
-            width:90%;
-            max-width:420px;
-            text-align:center;
-        }
-
-        #login-form h2 {
-            font-family:'Permanent Marker',cursive;
-            color:#e74c3c;
-            font-size:3.8rem; /* большой креативный шрифт */
-            margin:0 0 32px 0;
-        }
-
-        #login-form p {
-            margin:0 0 28px 0;
-            font-size:1.4rem;
-        }
-
-        #login-form input[type="tel"] {
-            width:100%;
-            padding:20px;
-            font-size:1.6rem;
-            border:2px solid #ffe0e0;
-            border-radius:16px;
-            margin-bottom:28px;
-        }
-
-        #login-form button {
-            width:100%;
-            padding:22px;
-            font-size:1.8rem;
-            font-weight:bold;
-            background:var(--accent);
-            color:white;
-            border:none;
-            border-radius:20px;
-            box-shadow:0 8px 24px rgba(255,107,107,0.5);
-        }
+        #login-form { background:white; padding:60px 40px; border-radius:32px; width:90%; max-width:420px; text-align:center; }
+        #login-form h2 { font-family:'Permanent Marker',cursive; color:#e74c3c; font-size:3.8rem; margin:0 0 32px 0; }
+        #login-form p { margin:0 0 28px 0; font-size:1.4rem; }
+        #login-form input[type="tel"] { width:100%; padding:20px; font-size:1.6rem; border:2px solid #ffe0e0; border-radius:16px; margin-bottom:28px; }
+        #login-form button { width:100%; padding:22px; font-size:1.8rem; font-weight:bold; background:var(--accent); color:white; border:none; border-radius:20px; box-shadow:0 8px 24px rgba(255,107,107,0.5); }
     </style>
 </head>
 <body>
@@ -206,9 +42,9 @@
 <div id="login">
     <div id="login-form">
         <h2>My Daily</h2>
-        <p>Вход по номеру телефона</p>
+        <p>Введи номер телефона</p>
         <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
-        <button onclick="login()">Войти</button>
+        <button onclick="loginWithPhone()">Войти / Создать</button>
     </div>
 </div>
 
@@ -222,39 +58,78 @@
     </div>
 </div>
 
-<button class="add-btn" onclick="addTask()">+</button>
+<button class="add-btn" onclick="addTask()" style="display:none;">+</button>
 
 <script>
+    const supabaseUrl = 'https://qkhvvrwccubbufffiary.supabase.co'; // ← ВСТАВЬ СВОЙ
+    const supabaseKey = 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';               // ← ВСТАВЬ СВОЙ
+    const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
+
     let currentDate = new Date();
-    let tasks = JSON.parse(localStorage.getItem('myDaily2026')) || {};
     let currentTaskIndex = 0;
+    let currentPhone = null;
 
     function formatDateKey(d = currentDate) { return d.toISOString().split('T')[0]; }
-    function formatDateShort(d = currentDate) { return d.toLocaleDateString('ru', {weekday:'short', day:'numeric', month:'short'}); }
 
-    function login() {
-        const phone = document.getElementById('phone').value.trim();
-        if (phone.length < 5) return alert("Введите номер");
+    async function loginWithPhone() {
+        const phoneInput = document.getElementById('phone').value.trim();
+        if (!phoneInput) return alert("Введите номер телефона");
+
+        // Нормализуем номер (можно добавить свою логику, например +7 → 7...)
+        const phone = phoneInput.replace(/\D/g, '');
+
+        // Проверяем, есть ли пользователь
+        let { data: user, error } = await supabase
+            .from('users')
+            .select('phone')
+            .eq('phone', phone)
+            .single();
+
+        if (error && error.code !== 'PGRST116') { // не "не найдено"
+            return alert("Ошибка: " + error.message);
+        }
+
+        if (!user) {
+            // Создаём нового пользователя
+            const { error: insertError } = await supabase
+                .from('users')
+                .insert({ phone });
+            if (insertError) return alert("Не удалось создать пользователя: " + insertError.message);
+            alert("Создан новый аккаунт!");
+        }
+
+        currentPhone = phone;
         document.getElementById('login').style.display = 'none';
         document.querySelector('.main').style.display = 'flex';
         document.querySelector('.add-btn').style.display = 'block';
+
         loadDates();
         loadDate(currentDate);
     }
 
-    function loadDates() {
+    async function loadDates() {
         const container = document.getElementById('dateList');
         container.innerHTML = '';
-        const datesSet = new Set(Object.keys(tasks));
+
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('date_key')
+            .eq('phone', currentPhone)
+            .order('date_key');
+
+        if (error) return console.error(error);
+
+        const dates = new Set(data.map(row => row.date_key));
         for (let i = -14; i <= 14; i++) {
             const d = new Date(); d.setDate(d.getDate() + i);
-            datesSet.add(formatDateKey(d));
+            dates.add(formatDateKey(d));
         }
-        [...datesSet].sort().forEach(str => {
+
+        [...dates].sort().forEach(str => {
             const d = new Date(str);
             const item = document.createElement('div');
             item.className = 'date-item';
-            item.textContent = formatDateShort(d);
+            item.textContent = d.toLocaleDateString('ru', {weekday:'short', day:'numeric', month:'short'});
             if (str === formatDateKey(currentDate)) item.classList.add('selected');
             if (str === formatDateKey(new Date())) item.classList.add('today');
             item.onclick = () => { currentDate = d; currentTaskIndex = 0; loadDate(d); loadDates(); };
@@ -262,21 +137,29 @@
         });
     }
 
-    function loadDate(date) {
+    async function loadDate(date) {
         currentDate = date;
         const key = formatDateKey();
         document.getElementById('dateTitle').textContent = date.toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
-        if (!tasks[key]) tasks[key] = [];
+
+        const { data: tasksData, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('phone', currentPhone)
+            .eq('date_key', key)
+            .order('created_at');
+
+        if (error) return console.error(error);
 
         const list = document.getElementById('taskList');
         list.innerHTML = '';
 
-        if (tasks[key].length === 0) {
+        if (tasksData.length === 0) {
             list.innerHTML = '<div style="text-align:center;color:#aaa;font-size:1.5rem;padding:120px 0">Пока задач нет 😌</div>';
             return;
         }
 
-        tasks[key].forEach((t, i) => {
+        tasksData.forEach((t, i) => {
             const taskEl = document.createElement('div');
             taskEl.className = 'task';
             if (i === currentTaskIndex) taskEl.classList.add('active');
@@ -284,14 +167,13 @@
             const del = document.createElement('button');
             del.className = 'delete-btn';
             del.textContent = '×';
-            del.onclick = e => {
+            del.onclick = async e => {
                 e.stopPropagation();
-                if (confirm('Удалить?')) {
-                    tasks[key].splice(i, 1);
-                    if (currentTaskIndex >= tasks[key].length && currentTaskIndex > 0) currentTaskIndex--;
-                    save();
-                    loadDate(currentDate);
-                }
+                if (!confirm('Удалить?')) return;
+                await supabase.from('tasks').delete().eq('id', t.id);
+                if (currentTaskIndex >= tasksData.length - 1 && currentTaskIndex > 0) currentTaskIndex--;
+                loadDate(currentDate);
+                loadDates();
             };
             taskEl.appendChild(del);
 
@@ -303,7 +185,7 @@
 
             textSpan.onclick = e => {
                 e.stopPropagation();
-                editTask(textSpan, t, key, i);
+                editTask(textSpan, t, key);
             };
 
             const status = document.createElement('div');
@@ -317,9 +199,8 @@
                 cb.style.width = '40px';
                 cb.style.height = '40px';
                 cb.style.accentColor = '#ff6b6b';
-                cb.onchange = () => {
-                    t.completed = true;
-                    save();
+                cb.onchange = async () => {
+                    await supabase.from('tasks').update({ completed: true }).eq('id', t.id);
                     loadDate(currentDate);
                 };
                 status.appendChild(cb);
@@ -332,26 +213,29 @@
         setTimeout(() => {
             const active = list.querySelector('.task.active');
             if (active) active.scrollIntoView({behavior:'smooth', block:'center'});
-        }, 200); // чуть больше задержки — для надёжности
+        }, 200);
     }
 
-    function editTask(el, taskObj, key, index) {
+    async function editTask(el, task, dateKey) {
         const input = document.createElement('input');
         input.type = 'text';
-        input.value = taskObj.text;
+        input.value = task.text;
         input.style = 'flex:1; font:inherit; font-size:inherit; width:100%; border:none; outline:none; background:transparent; padding:0;';
 
-        input.onblur = () => {
+        input.onblur = async () => {
             const newText = input.value.trim();
-            if (newText) taskObj.text = newText;
-            else { tasks[key].splice(index, 1); if (currentTaskIndex > 0) currentTaskIndex--; }
-            save();
+            if (newText) {
+                await supabase.from('tasks').update({ text: newText }).eq('id', task.id);
+            } else {
+                await supabase.from('tasks').delete().eq('id', task.id);
+            }
             loadDate(currentDate);
+            loadDates();
         };
 
         input.onkeydown = e => {
             if (e.key === 'Enter') input.blur();
-            if (e.key === 'Escape') { input.value = taskObj.text; input.blur(); }
+            if (e.key === 'Escape') { input.value = task.text; input.blur(); }
         };
 
         el.replaceWith(input);
@@ -359,55 +243,26 @@
         input.select();
     }
 
-    function addTask() {
+    async function addTask() {
         const text = prompt('Новая задача:')?.trim();
         if (!text) return;
-        const key = formatDateKey();
-        if (!tasks[key]) tasks[key] = [];
-        tasks[key].push({text, completed: false});
-        currentTaskIndex = tasks[key].length - 1;
-        save();
-        loadDate(currentDate);
+
+        const { error } = await supabase.from('tasks').insert({
+            phone: currentPhone,
+            date_key: formatDateKey(),
+            text,
+            completed: false
+        });
+
+        if (error) alert("Ошибка: " + error.message);
+        else {
+            currentTaskIndex = 999; // чтобы после добавления переключиться на последнюю
+            loadDate(currentDate);
+            loadDates();
+        }
     }
 
-    function save() {
-        localStorage.setItem('myDaily2026', JSON.stringify(tasks));
-    }
-
-    // Самое важное — определение активной задачи при скролле
-    let scrollTimer;
-    document.querySelector('.task-carousel').addEventListener('scroll', () => {
-        clearTimeout(scrollTimer);
-        scrollTimer = setTimeout(() => {
-            const tasksEls = document.querySelectorAll('.task');
-            if (tasksEls.length === 0) return;
-
-            let bestIndex = 0;
-            let minDist = Infinity;
-
-            tasksEls.forEach((el, idx) => {
-                const rect = el.getBoundingClientRect();
-                const centerY = rect.top + rect.height / 2;
-                const viewportCenter = window.innerHeight / 2;
-                const dist = Math.abs(centerY - viewportCenter);
-                if (dist < minDist) {
-                    minDist = dist;
-                    bestIndex = idx;
-                }
-            });
-
-            // Если дошли до конца — принудительно берём последнюю
-            if (bestIndex === tasksEls.length - 1 && minDist < 300) { // порог, чтобы последняя точно активировалась
-                bestIndex = tasksEls.length - 1;
-            }
-
-            if (bestIndex !== currentTaskIndex) {
-                currentTaskIndex = bestIndex;
-                loadDate(currentDate);
-            }
-        }, 80); // быстрый отклик
-    });
-
+    // init
     loadDates();
 </script>
 </body>
