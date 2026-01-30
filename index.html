@@ -61,8 +61,8 @@
 <button class="add-btn" onclick="addTask()" style="display:none;">+</button>
 
 <script>
-    const supabaseUrl = 'https://qkhvvrwccubbufffiary.supabase.co'; // ← ВСТАВЬ СВОЙ
-    const supabaseKey = 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';               // ← ВСТАВЬ СВОЙ
+    const supabaseUrl = 'https://qkhvvrwccubbufffiary.supabase.co';
+    const supabaseKey = 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';
     const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
 
     let currentDate = new Date();
@@ -75,26 +75,32 @@
         const phoneInput = document.getElementById('phone').value.trim();
         if (!phoneInput) return alert("Введите номер телефона");
 
-        // Нормализуем номер (можно добавить свою логику, например +7 → 7...)
-        const phone = phoneInput.replace(/\D/g, '');
+        // Нормализация номера (цифры + код страны)
+        let phone = phoneInput.replace(/\D/g, '');
+        if (phone.startsWith('8')) phone = '7' + phone.slice(1);
+        phone = '+' + phone;
 
-        // Проверяем, есть ли пользователь
+        console.log("Попытка входа:", phone);
+
         let { data: user, error } = await supabase
             .from('users')
             .select('phone')
             .eq('phone', phone)
             .single();
 
-        if (error && error.code !== 'PGRST116') { // не "не найдено"
+        if (error && error.code !== 'PGRST116') {
+            console.error("Ошибка проверки:", error);
             return alert("Ошибка: " + error.message);
         }
 
         if (!user) {
-            // Создаём нового пользователя
             const { error: insertError } = await supabase
                 .from('users')
                 .insert({ phone });
-            if (insertError) return alert("Не удалось создать пользователя: " + insertError.message);
+            if (insertError) {
+                console.error("Ошибка создания:", insertError);
+                return alert("Не удалось создать: " + insertError.message);
+            }
             alert("Создан новый аккаунт!");
         }
 
@@ -103,8 +109,8 @@
         document.querySelector('.main').style.display = 'flex';
         document.querySelector('.add-btn').style.display = 'block';
 
-        loadDates();
-        loadDate(currentDate);
+        await loadDates();
+        await loadDate(currentDate);
     }
 
     async function loadDates() {
@@ -117,7 +123,10 @@
             .eq('phone', currentPhone)
             .order('date_key');
 
-        if (error) return console.error(error);
+        if (error) {
+            console.error("Ошибка дат:", error);
+            return alert("Ошибка загрузки дат");
+        }
 
         const dates = new Set(data.map(row => row.date_key));
         for (let i = -14; i <= 14; i++) {
@@ -149,7 +158,10 @@
             .eq('date_key', key)
             .order('created_at');
 
-        if (error) return console.error(error);
+        if (error) {
+            console.error("Ошибка задач:", error);
+            return alert("Ошибка загрузки задач");
+        }
 
         const list = document.getElementById('taskList');
         list.innerHTML = '';
@@ -185,7 +197,7 @@
 
             textSpan.onclick = e => {
                 e.stopPropagation();
-                editTask(textSpan, t, key);
+                editTask(textSpan, t);
             };
 
             const status = document.createElement('div');
@@ -216,7 +228,7 @@
         }, 200);
     }
 
-    async function editTask(el, task, dateKey) {
+    async function editTask(el, task) {
         const input = document.createElement('input');
         input.type = 'text';
         input.value = task.text;
@@ -256,14 +268,14 @@
 
         if (error) alert("Ошибка: " + error.message);
         else {
-            currentTaskIndex = 999; // чтобы после добавления переключиться на последнюю
+            currentTaskIndex = 999; // переключимся на последнюю
             loadDate(currentDate);
             loadDates();
         }
     }
 
     // init
-    loadDates();
+    console.log("Приложение запущено — введите номер и нажмите Войти");
 </script>
 </body>
 </html>
