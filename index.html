@@ -75,7 +75,6 @@
         const phoneInput = document.getElementById('phone').value.trim();
         if (!phoneInput) return alert("Введите номер телефона");
 
-        // Нормализация номера (цифры + код страны)
         let phone = phoneInput.replace(/\D/g, '');
         if (phone.startsWith('8')) phone = '7' + phone.slice(1);
         phone = '+' + phone;
@@ -268,13 +267,12 @@
 
         if (error) alert("Ошибка: " + error.message);
         else {
-            currentTaskIndex = 999; // переключимся на последнюю
+            currentTaskIndex = 999;
             loadDate(currentDate);
             loadDates();
         }
     }
 
-    // init
     console.log("Приложение запущено — введите номер и нажмите Войти");
 </script>
 </body>
