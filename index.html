@@ -328,6 +328,9 @@
     let currentTaskIndex = 0;
     let isEditing = false;
 
+    // ✅ МАССИВ СОКРАЩЕНИЙ ДНЕЙ НЕДЕЛИ
+    const dayNames = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+
     function formatDateKey(date) {
         const d = new Date(date);
         return d.toISOString().split('T')[0];
@@ -337,8 +340,14 @@
         return date.toLocaleDateString('ru', { weekday: 'long', day: 'numeric', month: 'long' });
     }
 
+    // ✅ ИСПРАВЛЕНО: теперь возвращает "18 янв. (ЧТ)"
     function formatDateShort(date) {
-        return date.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+        const d = new Date(date);
+        const day = d.getDate();
+        const month = d.toLocaleDateString('ru', { month: 'short' });
+        const dayOfWeek = d.getDay();
+        const dayName = dayNames[dayOfWeek];
+        return `${day} ${month}. (${dayName})`;
     }
 
     async function login() {
@@ -352,14 +361,12 @@
         if (phone.length < 10) return alert('Неверный формат номера');
 
         try {
-            // ✅ Проверяем наличие пользователя
             const {  user, error: checkError } = await supabase
                 .from('users')
                 .select('phone')
                 .eq('phone', phone)
                 .single();
 
-            // Если пользователя нет — создаём
             if (checkError && checkError.code === 'PGRST116') {
                 const { error: insertError } = await supabase.from('users').insert({ phone });
                 if (insertError && insertError.code !== '23505') {
@@ -425,7 +432,6 @@
         const dateKey = formatDateKey(currentDate);
         document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
 
-        // ✅ ПРАВИЛЬНАЯ ДЕСТРУКТУРИЗАЦИЯ - ИСПРАВЛЕНО!
         const { data, error } = await supabase
             .from('tasks')
             .select('*')
@@ -446,13 +452,17 @@
         console.log('📅 dateKey:', dateKey);
         console.log('📊 Задачи из базы:', data);
 
-        // ✅ Проверка на пустой массив
         if (!data || data.length === 0) {
             container.innerHTML = '<div class="empty">Пока задач нет 😌</div>';
             return;
         }
 
         console.log(`✅ Загружено ${data.length} задач`);
+
+        // ✅ Устанавливаем индекс последней задачи как активную
+        if (currentTaskIndex >= data.length) {
+            currentTaskIndex = data.length - 1;
+        }
 
         data.forEach((task, i) => {
             const taskEl = document.createElement('div');
@@ -467,7 +477,10 @@
                 e.stopPropagation();
                 if (confirm('Удалить задачу?')) {
                     await supabase.from('tasks').delete().eq('id', task.id);
-                    if (currentTaskIndex >= data.length - 1 && currentTaskIndex > 0) currentTaskIndex--;
+                    // ✅ Исправлено: правильное обновление индекса
+                    if (currentTaskIndex >= data.length - 1 && currentTaskIndex > 0) {
+                        currentTaskIndex--;
+                    }
                     loadDate();
                     loadDates();
                 }
@@ -509,7 +522,10 @@
             container.appendChild(taskEl);
         });
 
-        scrollToActiveTask();
+        // ✅ Добавлена небольшая задержка для корректного скролла
+        setTimeout(() => {
+            scrollToActiveTask();
+        }, 100);
     }
 
     function scrollToActiveTask() {
@@ -523,7 +539,7 @@
         }
     }
 
-    // Обновление активной задачи при скролле
+    // ✅ Улучшенный обработчик скролла с правильным определением активной задачи
     document.getElementById('taskCarousel').addEventListener('scroll', () => {
         const tasks = document.querySelectorAll('.task');
         if (tasks.length === 0) return;
@@ -547,7 +563,6 @@
         }
     });
 
-    // Редактирование прямо в блоке с использованием contenteditable
     function startEditing(textElement, task) {
         const originalText = textElement.textContent;
         
@@ -641,9 +656,14 @@
             return;
         }
 
+        // ✅ Устанавливаем индекс на последнюю задачу
         currentTaskIndex = data.length - 1;
-        loadDate();
-        loadDates();
+        
+        // ✅ Загружаем данные с небольшой задержкой для корректного скролла
+        setTimeout(() => {
+            loadDate();
+            loadDates();
+        }, 100);
     }
 
     document.getElementById('loginBtn').addEventListener('click', login);
