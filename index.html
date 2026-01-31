@@ -60,11 +60,11 @@
 <button class="add-btn" onclick="addTask()" style="display:none;">+</button>
 
 <script type="module">
-    // ⚠️ ЗАМЕНИТЕ НА ВАШИ РЕАЛЬНЫЕ КЛЮЧИ ИЗ SUPABASE!
+    // ⚠️ ОБЯЗАТЕЛЬНО ЗАМЕНИТЕ НА ВАШИ РЕАЛЬНЫЕ КЛЮЧИ ИЗ SUPABASE!
     const SUPABASE_URL = 'https://qkhvvrwccubbufffiary.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraHZ2cndjY3ViYnVmZmZpYXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzQ1NzgsImV4cCI6MjA4NTM1MDU3OH0.0MBZApkMoLIhnQqKtQnfO8nyke9uTBqy21tYxBELJsI';
 
-    // ✅ Импорт и инициализация Supabase
+    // ✅ Правильная инициализация Supabase через ES6 модуль
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
 
@@ -278,8 +278,10 @@
             completed: false
         });
 
-        if (error) alert("Ошибка: " + error.message);
-        else {
+        if (error) {
+            console.error("Ошибка создания задачи:", error);
+            alert("Ошибка: " + error.message);
+        } else {
             currentTaskIndex = 999;
             loadDate(currentDate);
             loadDates();
