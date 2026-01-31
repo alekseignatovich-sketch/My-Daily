@@ -2,13 +2,13 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Daily</title>
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #fdf6f6; --card: #ffffff; --accent: #ff6b6b; --text: #2c2c2c; }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
+        body { font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
         header { padding:18px; background:linear-gradient(135deg,#ffeef4,#fff5e6); font-family:'Permanent Marker',cursive; font-size:2.3rem; text-align:center; color:#e74c3c; text-shadow:3px 3px 0 #fff; }
         .login-screen { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:999; }
         .login-form { background:white; padding:40px; border-radius:24px; width:90%; max-width:400px; text-align:center; }
@@ -30,7 +30,19 @@
         .task:not(.active) { transform:scale(0.78); opacity:0.58; }
         .delete-btn { position:absolute; top:14px; right:18px; background:none; border:none; font-size:2.1rem; color:#e74c3c; cursor:pointer; opacity:0.85; transition:all .2s; }
         .delete-btn:hover { opacity:1; transform:scale(1.25); }
-        .task-text { flex:1; font-size:clamp(1.3rem, 6.2vw, 1.58rem); font-weight:500; line-height:1.48; word-break:break-word; padding-right:70px; cursor:text; outline:none; }
+        .task-text { 
+            flex:1; 
+            font-size:clamp(1.3rem, 6.2vw, 1.58rem); 
+            font-weight:500; 
+            line-height:1.5; 
+            word-break:break-word; 
+            overflow-wrap:break-word;
+            hyphens:auto;
+            padding-right:70px; 
+            cursor:text; 
+            outline:none; 
+            text-align:center;
+        }
         .task-text.long { font-size:clamp(1.12rem, 5.2vw, 1.35rem); }
         .task-text.very-long { font-size:clamp(1rem, 4.6vw, 1.2rem); }
         .task-status { font-size:3.4rem; width:68px; height:68px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -43,6 +55,126 @@
             background:rgba(255,250,230,0.5); 
             border-radius:8px; 
             padding:4px 8px; 
+        }
+        
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 767px) {
+            header {
+                font-size: 1.8rem;
+                padding: 14px;
+            }
+            
+            .sidebar {
+                width: 90px;
+                padding: 10px 4px;
+            }
+            
+            .date-btn {
+                font-size: 0.75rem;
+                padding: 8px 3px;
+            }
+            
+            .date-title {
+                font-size: 1.4rem;
+                padding: 12px 16px 8px;
+            }
+            
+            .task-carousel {
+                padding: 80px 0 250px;
+            }
+            
+            .task-list {
+                gap: 80px;
+            }
+            
+            .task {
+                padding: 22px 26px;
+                min-height: 120px;
+                width: 92%;
+            }
+            
+            .task.active {
+                transform: scale(1.18) !important;
+            }
+            
+            .task-status {
+                font-size: 2.8rem;
+                width: 58px;
+                height: 58px;
+            }
+            
+            .delete-btn {
+                font-size: 1.8rem;
+                top: 10px;
+                right: 14px;
+            }
+            
+            .add-btn {
+                width: 68px;
+                height: 68px;
+                font-size: 2.8rem;
+                bottom: 28px;
+                right: 28px;
+            }
+            
+            .login-form {
+                padding: 30px 20px;
+            }
+            
+            .login-form h2 {
+                font-size: 2.4rem;
+            }
+            
+            .login-form input,
+            .login-form button {
+                padding: 14px;
+                font-size: 1.3rem;
+            }
+        }
+        
+        /* Для очень маленьких экранов */
+        @media (max-width: 375px) {
+            .task-carousel {
+                padding: 70px 0 220px;
+            }
+            
+            .task-list {
+                gap: 70px;
+            }
+            
+            .task {
+                padding: 20px 24px;
+                min-height: 110px;
+            }
+            
+            .task-text {
+                line-height: 1.55;
+            }
+            
+            .sidebar {
+                width: 80px;
+            }
+            
+            .date-btn {
+                font-size: 0.7rem;
+                padding: 7px 2px;
+            }
+        }
+        
+        /* Для планшетов */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .task-carousel {
+                padding: 100px 0 350px;
+            }
+            
+            .task {
+                padding: 26px 30px;
+                min-height: 135px;
+            }
+            
+            .task.active {
+                transform: scale(1.22) !important;
+            }
         }
     </style>
 </head>
