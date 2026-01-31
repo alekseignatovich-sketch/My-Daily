@@ -2,305 +2,291 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Daily</title>
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg: #fdf6f6; --card: #ffffff; --accent: #ff6b6b; --text: #2c2c2c; }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); }
+        body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
         header { padding:18px; background:linear-gradient(135deg,#ffeef4,#fff5e6); font-family:'Permanent Marker',cursive; font-size:2.3rem; text-align:center; color:#e74c3c; text-shadow:3px 3px 0 #fff; }
-        .login-screen { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:999; }
-        .login-form { background:white; padding:40px; border-radius:24px; width:90%; max-width:400px; text-align:center; }
-        .login-form h2 { font-family:'Permanent Marker',cursive; color:#e74c3c; font-size:2.8rem; margin-bottom:20px; }
-        .login-form input { width:100%; padding:16px; font-size:1.4rem; border:2px solid #ffe0e0; border-radius:12px; margin:12px 0; }
-        .login-form button { width:100%; padding:16px; font-size:1.6rem; font-weight:bold; background:var(--accent); color:white; border:none; border-radius:16px; margin-top:16px; cursor:pointer; }
-        .main { display:none; min-height:100vh; }
-        .content { display:flex; }
-        .sidebar { width:100px; background:white; border-right:1px solid #ffe0e0; padding:12px 6px; overflow-y:auto; }
-        .date-btn { padding:10px 4px; text-align:center; cursor:pointer; border-radius:8px; font-size:0.85rem; margin:4px 0; }
-        .date-btn.active { background:#ffe0e0; font-weight:bold; color:#e74c3c; }
-        .date-btn.today { color:var(--accent); font-weight:bold; }
-        .tasks-area { flex:1; padding:20px; }
-        .date-title { font-size:1.6rem; font-weight:bold; margin-bottom:20px; text-align:center; }
-        .task { background:white; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 4px 16px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:space-between; }
-        .task-text { flex:1; font-size:1.2rem; cursor:pointer; }
-        .task-checkbox { width:30px; height:30px; accent-color:var(--accent); }
-        .task-done { text-decoration:line-through; opacity:0.6; }
-        .add-btn { position:fixed; bottom:30px; right:30px; width:60px; height:60px; border-radius:50%; background:var(--accent); color:white; font-size:2.5rem; border:none; box-shadow:0 6px 20px rgba(255,107,107,0.5); display:none; cursor:pointer; z-index:100; }
-        .empty { text-align:center; color:#aaa; font-size:1.3rem; padding:80px 20px; }
+        .main { display:flex; height:calc(100vh - 78px); }
+        .dates-sidebar { width:110px; background:white; border-right:1px solid #ffe0e0; overflow-y:auto; padding:14px 6px; }
+        .date-item { padding:12px 4px; text-align:center; cursor:pointer; border-radius:12px; font-size:0.92rem; transition:all .2s; }
+        .date-item.selected { background:#ffe0e0; font-weight:bold; color:#e74c3c; }
+        .date-item.today { color:var(--accent); font-weight:bold; }
+        .tasks-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+        .date-title { padding:16px 20px 10px; font-size:1.45rem; font-weight:700; text-align:center; background:white; border-bottom:1px solid #ffd8d8; }
+        .task-carousel { flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; padding:80px 0 300px; }
+        .task-list { display:flex; flex-direction:column; align-items:center; gap:80px; width:100%; max-width:440px; margin:0 auto; }
+        .task { background:var(--card); border-radius:24px; padding:28px 32px; width:88%; max-width:400px; box-shadow:0 6px 30px rgba(231,76,60,0.18); display:flex; align-items:center; justify-content:space-between; gap:24px; position:relative; scroll-snap-align:center; transition:all 0.5s cubic-bezier(0.22, 1, 0.36, 1); min-height:140px; }
+        .task.active { transform:scale(1.24) !important; box-shadow:0 18px 56px rgba(231,76,60,0.38) !important; opacity:1 !important; }
+        .task:not(.active) { transform:scale(0.78); opacity:0.58; }
+        .delete-btn { position:absolute; top:14px; right:18px; background:none; border:none; font-size:2.1rem; color:#e74c3c; cursor:pointer; opacity:0.85; transition:all .2s; }
+        .delete-btn:hover { opacity:1; transform:scale(1.25); }
+        .task-text { flex:1; font-size:clamp(1.3rem, 6.2vw, 1.58rem); font-weight:500; line-height:1.48; word-break:break-word; padding-right:70px; cursor:text; }
+        .task-text.long { font-size:clamp(1.12rem, 5.2vw, 1.35rem); }
+        .task-text.very-long { font-size:clamp(1rem, 4.6vw, 1.2rem); }
+        .task-status { font-size:3.4rem; width:68px; height:68px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .add-btn { position:fixed; bottom:36px; right:36px; width:78px; height:78px; border-radius:50%; background:var(--accent); color:white; font-size:3.2rem; border:none; box-shadow:0 12px 32px rgba(255,107,107,0.48); z-index:100; }
+        #login { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:999; }
+        #login-form { background:white; padding:60px 40px; border-radius:32px; width:90%; max-width:420px; text-align:center; }
+        #login-form h2 { font-family:'Permanent Marker',cursive; color:#e74c3c; font-size:3.8rem; margin:0 0 32px 0; }
+        #login-form p { margin:0 0 28px 0; font-size:1.4rem; }
+        #login-form input[type="tel"] { width:100%; padding:20px; font-size:1.6rem; border:2px solid #ffe0e0; border-radius:16px; margin-bottom:28px; }
+        #login-form button { width:100%; padding:22px; font-size:1.8rem; font-weight:bold; background:var(--accent); color:white; border:none; border-radius:20px; box-shadow:0 8px 24px rgba(255,107,107,0.5); }
     </style>
 </head>
 <body>
 
-<div class="login-screen" id="loginScreen">
-    <div class="login-form">
+<div id="login">
+    <div id="login-form">
         <h2>My Daily</h2>
-        <p style="margin-bottom:16px">Введите номер телефона</p>
-        <input type="tel" id="phoneInput" placeholder="+3 (__) ___-__-__" autocomplete="tel">
+        <p>Введи номер телефона</p>
+        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
         <button id="loginBtn">Войти / Создать</button>
     </div>
 </div>
 
 <header>My Daily</header>
 
-<div class="main" id="mainContent">
-    <div class="content">
-        <div class="sidebar">
-            <div id="dateList"></div>
-        </div>
-        <div class="tasks-area">
-            <div class="date-title" id="dateTitle"></div>
-            <div id="taskList"></div>
-        </div>
+<div class="main" style="display:none;">
+    <div class="dates-sidebar"><div class="date-list" id="dateList"></div></div>
+    <div class="tasks-area">
+        <h2 class="date-title" id="dateTitle"></h2>
+        <div class="task-carousel"><div class="task-list" id="taskList"></div></div>
     </div>
 </div>
 
-<button class="add-btn" id="addBtn">+</button>
+<button class="add-btn" onclick="addTask()" style="display:none;">+</button>
 
-<script type="module">
-    // 🔑 КЛЮЧИ SUPABASE
-    const SUPABASE_URL = 'https://qkhvvrwccubbufffiary.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraHZ2cndjY3ViYnVmZmZpYXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzQ1NzgsImV4cCI6MjA4NTM1MDU3OH0.0MBZApkMoLIhnQqKtQnfO8nyke9uTBqy21tYxBELJsI';
+<script>
+    // === Supabase из переменных окружения Railway ===
+    const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qkhvvrwccubbufffiary.supabase.co';
+    const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_Ui66_nbVg_S5lzKHxX3BVA_gS_h5AUz';
 
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log("Supabase подключён с URL:", SUPABASE_URL);
 
     let currentDate = new Date();
+    let currentTaskIndex = 0;
     let currentPhone = null;
 
-    // Форматирование даты
-    function formatDateKey(date) {
-        const d = new Date(date);
-        return d.getFullYear() + '-' + 
-               String(d.getMonth() + 1).padStart(2, '0') + '-' + 
-               String(d.getDate()).padStart(2, '0');
+    function formatDateKey(d = currentDate) {
+        return d.toISOString().split('T')[0];
     }
 
-    // Форматирование для отображения
-    function formatDateDisplay(date) {
-        return date.toLocaleDateString('ru', { weekday: 'long', day: 'numeric', month: 'long' });
-    }
-
-    // Форматирование для кнопок
-    function formatDateShort(date) {
-        return date.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
-    }
-
-    // Вход по телефону
-    async function login() {
-        const phoneInput = document.getElementById('phoneInput').value.trim();
-        if (!phoneInput) {
-            alert('Введите номер телефона');
-            return;
-        }
+    async function loginWithPhone() {
+        console.log("=== Кнопка нажата ===");
+        const phoneInput = document.getElementById('phone').value.trim();
+        if (!phoneInput) return alert("Введите номер телефона");
 
         let phone = phoneInput.replace(/\D/g, '');
         if (phone.startsWith('8')) phone = '7' + phone.slice(1);
         phone = '+' + phone;
 
-        if (phone.length < 10) {
-            alert('Неверный формат номера');
+        console.log("Номер:", phone);
+
+        // Проверка / создание пользователя
+        let { data: user, error } = await supabase
+            .from('users')
+            .select('phone')
+            .eq('phone', phone)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            console.error("Ошибка Supabase:", error);
+            alert("Ошибка подключения: " + error.message);
             return;
         }
 
-        try {
-            // Проверяем существует ли пользователь
-            const {  user } = await supabase
-                .from('users')
-                .select('phone')
-                .eq('phone', phone)
-                .single();
-
-            // Если нет — создаём
-            if (!user) {
-                await supabase.from('users').insert({ phone });
+        if (!user) {
+            const { error: insertError } = await supabase.from('users').insert({ phone });
+            if (insertError) {
+                console.error("Ошибка создания:", insertError);
+                alert("Не удалось создать аккаунт: " + insertError.message);
+                return;
             }
-
-            currentPhone = phone;
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-            document.getElementById('addBtn').style.display = 'block';
-
-            loadDates();
-            loadTasks();
-        } catch (error) {
-            console.error('Ошибка входа:', error);
-            alert('Ошибка: ' + error.message);
+            alert("Создан новый аккаунт!");
+        } else {
+            console.log("Пользователь найден");
         }
+
+        currentPhone = phone;
+        document.getElementById('login').style.display = 'none';
+        document.querySelector('.main').style.display = 'flex';
+        document.querySelector('.add-btn').style.display = 'block';
+
+        await loadDates();
+        await loadDate(currentDate);
     }
 
-    // Загрузка списка дат
     async function loadDates() {
         const container = document.getElementById('dateList');
         container.innerHTML = '';
 
-        try {
-            const { data } = await supabase
-                .from('tasks')
-                .select('date_key')
-                .eq('phone', currentPhone)
-                .order('date_key', { ascending: true });
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('date_key')
+            .eq('phone', currentPhone)
+            .order('date_key');
 
-            const dates = new Set(data?.map(row => row.date_key) || []);
-            
-            // Добавляем 14 дней вперёд и назад
-            for (let i = -14; i <= 14; i++) {
-                const d = new Date();
-                d.setDate(d.getDate() + i);
-                dates.add(formatDateKey(d));
-            }
+        if (error) {
+            console.error("Ошибка загрузки дат:", error);
+            return;
+        }
 
-            [...dates].sort().forEach(dateStr => {
-                const date = new Date(dateStr);
-                const btn = document.createElement('div');
-                btn.className = 'date-btn';
-                btn.textContent = formatDateShort(date);
-                
-                if (dateStr === formatDateKey(currentDate)) {
-                    btn.classList.add('active');
-                }
-                if (dateStr === formatDateKey(new Date())) {
-                    btn.classList.add('today');
-                }
-                
-                btn.onclick = () => {
-                    currentDate = date;
-                    document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    loadTasks();
+        const dates = new Set(data.map(row => row.date_key));
+        for (let i = -14; i <= 14; i++) {
+            const d = new Date(); d.setDate(d.getDate() + i);
+            dates.add(formatDateKey(d));
+        }
+
+        [...dates].sort().forEach(str => {
+            const d = new Date(str);
+            const item = document.createElement('div');
+            item.className = 'date-item';
+            item.textContent = d.toLocaleDateString('ru', {weekday:'short', day:'numeric', month:'short'});
+            if (str === formatDateKey(currentDate)) item.classList.add('selected');
+            if (str === formatDateKey(new Date())) item.classList.add('today');
+            item.onclick = () => { currentDate = d; currentTaskIndex = 0; loadDate(d); loadDates(); };
+            container.appendChild(item);
+        });
+    }
+
+    async function loadDate(date) {
+        currentDate = date;
+        const key = formatDateKey();
+        document.getElementById('dateTitle').textContent = date.toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
+
+        const { data: tasksData, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('phone', currentPhone)
+            .eq('date_key', key)
+            .order('created_at');
+
+        if (error) {
+            console.error("Ошибка загрузки задач:", error);
+            return;
+        }
+
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+
+        if (tasksData.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:#aaa;font-size:1.5rem;padding:120px 0">Пока задач нет 😌</div>';
+            return;
+        }
+
+        tasksData.forEach((t, i) => {
+            const taskEl = document.createElement('div');
+            taskEl.className = 'task';
+            if (i === currentTaskIndex) taskEl.classList.add('active');
+
+            const del = document.createElement('button');
+            del.className = 'delete-btn';
+            del.textContent = '×';
+            del.onclick = async e => {
+                e.stopPropagation();
+                if (!confirm('Удалить?')) return;
+                await supabase.from('tasks').delete().eq('id', t.id);
+                if (currentTaskIndex >= tasksData.length - 1 && currentTaskIndex > 0) currentTaskIndex--;
+                loadDate(currentDate);
+                loadDates();
+            };
+            taskEl.appendChild(del);
+
+            const textSpan = document.createElement('div');
+            textSpan.className = 'task-text';
+            textSpan.textContent = t.text;
+            if (t.text.length > 50) textSpan.classList.add('long');
+            if (t.text.length > 100) textSpan.classList.add('very-long');
+
+            textSpan.onclick = e => {
+                e.stopPropagation();
+                editTask(textSpan, t);
+            };
+
+            const status = document.createElement('div');
+            status.className = 'task-status';
+            if (t.completed) {
+                status.textContent = '👍';
+            } else {
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = false;
+                cb.style.width = '40px';
+                cb.style.height = '40px';
+                cb.style.accentColor = '#ff6b6b';
+                cb.onchange = async () => {
+                    await supabase.from('tasks').update({ completed: true }).eq('id', t.id);
+                    loadDate(currentDate);
                 };
-                
-                container.appendChild(btn);
-            });
-        } catch (error) {
-            console.error('Ошибка загрузки дат:', error);
-        }
-    }
-
-    // Загрузка задач
-    async function loadTasks() {
-        document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
-
-        const container = document.getElementById('taskList');
-        container.innerHTML = '<div class="empty">Загрузка...</div>';
-
-        try {
-            const {  tasks } = await supabase
-                .from('tasks')
-                .select('*')
-                .eq('phone', currentPhone)
-                .eq('date_key', formatDateKey(currentDate))
-                .order('created_at', { ascending: true });
-
-            container.innerHTML = '';
-
-            if (!tasks || tasks.length === 0) {
-                container.innerHTML = '<div class="empty">Пока задач нет 😌</div>';
-                return;
+                status.appendChild(cb);
             }
 
-            tasks.forEach(task => {
-                const taskEl = document.createElement('div');
-                taskEl.className = 'task';
-                if (task.completed) taskEl.classList.add('task-done');
+            taskEl.append(textSpan, status);
+            list.appendChild(taskEl);
+        });
 
-                const textSpan = document.createElement('span');
-                textSpan.className = 'task-text';
-                textSpan.textContent = task.text;
-                textSpan.onclick = () => editTask(task);
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'task-checkbox';
-                checkbox.checked = task.completed;
-                checkbox.onchange = () => toggleTask(task.id, checkbox.checked);
-
-                taskEl.appendChild(textSpan);
-                taskEl.appendChild(checkbox);
-                container.appendChild(taskEl);
-            });
-        } catch (error) {
-            console.error('Ошибка загрузки задач:', error);
-            container.innerHTML = '<div class="empty">Ошибка загрузки</div>';
-        }
+        setTimeout(() => {
+            const active = list.querySelector('.task.active');
+            if (active) active.scrollIntoView({behavior:'smooth', block:'center'});
+        }, 200);
     }
 
-    // Переключение статуса задачи
-    async function toggleTask(taskId, completed) {
-        try {
-            await supabase
-                .from('tasks')
-                .update({ completed })
-                .eq('id', taskId);
-            
-            loadTasks();
-        } catch (error) {
-            console.error('Ошибка обновления:', error);
-            alert('Ошибка обновления задачи');
-        }
-    }
+    async function editTask(el, task) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = task.text;
+        input.style = 'flex:1; font:inherit; font-size:inherit; width:100%; border:none; outline:none; background:transparent; padding:0;';
 
-    // Редактирование/удаление задачи
-    async function editTask(task) {
-        const newText = prompt('Редактировать задачу:', task.text);
-        
-        if (newText === null) return; // Отмена
-        
-        if (newText.trim() === '') {
-            // Удаление
-            if (confirm('Удалить задачу?')) {
-                try {
-                    await supabase.from('tasks').delete().eq('id', task.id);
-                    loadTasks();
-                    loadDates();
-                } catch (error) {
-                    console.error('Ошибка удаления:', error);
-                    alert('Ошибка удаления задачи');
-                }
+        input.onblur = async () => {
+            const newText = input.value.trim();
+            if (newText) {
+                await supabase.from('tasks').update({ text: newText }).eq('id', task.id);
+            } else {
+                await supabase.from('tasks').delete().eq('id', task.id);
             }
-        } else {
-            // Обновление
-            try {
-                await supabase
-                    .from('tasks')
-                    .update({ text: newText.trim() })
-                    .eq('id', task.id);
-                
-                loadTasks();
-            } catch (error) {
-                console.error('Ошибка обновления:', error);
-                alert('Ошибка обновления задачи');
-            }
-        }
-    }
-
-    // Добавление задачи
-    async function addTask() {
-        const text = prompt('Новая задача:');
-        if (!text || !text.trim()) return;
-
-        try {
-            await supabase.from('tasks').insert({
-                phone: currentPhone,
-                date_key: formatDateKey(currentDate),
-                text: text.trim(),
-                completed: false
-            });
-
-            loadTasks();
+            loadDate(currentDate);
             loadDates();
-        } catch (error) {
-            console.error('Ошибка создания задачи:', error);
-            alert('Ошибка: ' + error.message);
+        };
+
+        input.onkeydown = e => {
+            if (e.key === 'Enter') input.blur();
+            if (e.key === 'Escape') { input.value = task.text; input.blur(); }
+        };
+
+        el.replaceWith(input);
+        input.focus();
+        input.select();
+    }
+
+    async function addTask() {
+        const text = prompt('Новая задача:')?.trim();
+        if (!text) return;
+
+        const { error } = await supabase.from('tasks').insert({
+            phone: currentPhone,
+            date_key: formatDateKey(),
+            text,
+            completed: false
+        });
+
+        if (error) alert("Ошибка: " + error.message);
+        else {
+            currentTaskIndex = 999;
+            loadDate(currentDate);
+            loadDates();
         }
     }
 
-    // Привязка событий
-    document.getElementById('loginBtn').addEventListener('click', login);
-    document.getElementById('addBtn').addEventListener('click', addTask);
-    document.getElementById('phoneInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') login();
+    // Привязываем кнопку после загрузки страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('loginBtn');
+        if (btn) btn.addEventListener('click', loginWithPhone);
+        console.log("Приложение готово — введите номер и нажмите кнопку");
     });
 </script>
 </body>
