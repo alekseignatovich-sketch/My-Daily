@@ -30,7 +30,7 @@
         .task:not(.active) { transform:scale(0.78); opacity:0.58; }
         .delete-btn { position:absolute; top:14px; right:18px; background:none; border:none; font-size:2.1rem; color:#e74c3c; cursor:pointer; opacity:0.85; transition:all .2s; }
         .delete-btn:hover { opacity:1; transform:scale(1.25); }
-        .task-text { flex:1; font-size:clamp(1.3rem, 6.2vw, 1.58rem); font-weight:500; line-height:1.48; word-break:break-word; padding-right:70px; cursor:text; }
+        .task-text { flex:1; font-size:clamp(1.3rem, 6.2vw, 1.58rem); font-weight:500; line-height:1.48; word-break:break-word; padding-right:70px; cursor:text; outline:none; }
         .task-text.long { font-size:clamp(1.12rem, 5.2vw, 1.35rem); }
         .task-text.very-long { font-size:clamp(1rem, 4.6vw, 1.2rem); }
         .task-status { font-size:3.4rem; width:68px; height:68px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -39,17 +39,10 @@
         
         /* Стили для режима редактирования */
         .task-editing { background:linear-gradient(135deg, #fff9e6, #ffffff); }
-        .task-input { 
-            flex:1; 
-            font-size:clamp(1.3rem, 6.2vw, 1.58rem); 
-            font-weight:500; 
-            line-height:1.48; 
-            border:none; 
-            outline:none; 
-            background:transparent; 
-            width:100%; 
-            padding-right:70px;
-            resize:none;
+        .task-text[contenteditable="true"] { 
+            background:rgba(255,250,230,0.5); 
+            border-radius:8px; 
+            padding:4px 8px; 
         }
     </style>
 </head>
@@ -87,6 +80,7 @@
     let currentDate = new Date();
     let currentPhone = null;
     let currentTaskIndex = 0;
+    let isEditing = false;
 
     function formatDateKey(date) {
         const d = new Date(date);
@@ -185,7 +179,7 @@
         const dateKey = formatDateKey(currentDate);
         document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
 
-        const { data: tasks, error } = await supabase
+        const {  tasks, error } = await supabase
             .from('tasks')
             .select('*')
             .eq('phone', currentPhone)
@@ -226,14 +220,17 @@
             };
             taskEl.appendChild(delBtn);
 
-            const textSpan = document.createElement('span');
+            const textSpan = document.createElement('div');
             textSpan.className = 'task-text';
             textSpan.textContent = task.text;
             if (task.text.length > 50) textSpan.classList.add('long');
             if (task.text.length > 100) textSpan.classList.add('very-long');
+            textSpan.dataset.taskId = task.id;
             textSpan.onclick = (e) => {
                 e.stopPropagation();
-                startEditing(taskEl, task);
+                if (!isEditing) {
+                    startEditing(textSpan, task);
+                }
             };
 
             const status = document.createElement('div');
@@ -296,83 +293,95 @@
         }
     });
 
-    // Редактирование прямо в блоке
-    function startEditing(taskEl, task) {
-        const textSpan = taskEl.querySelector('.task-text');
-        const originalText = textSpan.textContent;
+    // Редактирование прямо в блоке с использованием contenteditable
+    function startEditing(textElement, task) {
+        const originalText = textElement.textContent;
         
-        // Создаем поле ввода
-        const input = document.createElement('textarea');
-        input.className = 'task-input';
-        input.value = originalText;
-        input.rows = 1;
-        input.style.height = 'auto';
+        // Делаем элемент редактируемым
+        textElement.contentEditable = true;
+        textElement.classList.add('editing');
         
-        // Автоматически подгоняем высоту под содержимое
-        const adjustHeight = () => {
-            input.style.height = 'auto';
-            input.style.height = (input.scrollHeight) + 'px';
-        };
-        
-        input.addEventListener('input', adjustHeight);
-        adjustHeight();
-
-        // Сохранение при потере фокуса
-        input.onblur = async () => {
-            const newText = input.value.trim();
-            
-            if (newText === '') {
-                // Если текст пустой - удаляем задачу
-                if (confirm('Удалить задачу?')) {
-                    await supabase.from('tasks').delete().eq('id', task.id);
-                    loadDate();
-                    loadDates();
-                } else {
-                    // Восстанавливаем старый текст
-                    textSpan.textContent = originalText;
-                    textSpan.style.display = 'block';
-                    input.remove();
-                    taskEl.classList.remove('task-editing');
-                }
-            } else if (newText !== originalText) {
-                // Обновляем задачу
-                await supabase.from('tasks').update({ text: newText }).eq('id', task.id);
-                loadDate();
-            } else {
-                // Ничего не изменилось
-                textSpan.textContent = originalText;
-                textSpan.style.display = 'block';
-                input.remove();
-                taskEl.classList.remove('task-editing');
-            }
-        };
-
-        // Горячие клавиши
-        input.onkeydown = (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                // Enter - сохранить (кроме Shift+Enter)
-                e.preventDefault();
-                input.blur();
-            }
-            if (e.key === 'Escape') {
-                // Escape - отменить
-                textSpan.textContent = originalText;
-                textSpan.style.display = 'block';
-                input.remove();
-                taskEl.classList.remove('task-editing');
-            }
-        };
-
-        // Заменяем текст на поле ввода
-        textSpan.style.display = 'none';
-        taskEl.insertBefore(input, textSpan);
+        // Подсвечиваем родительскую карточку
+        const taskEl = textElement.closest('.task');
         taskEl.classList.add('task-editing');
+        isEditing = true;
         
-        // Фокус на поле ввода
-        input.focus();
+        // Устанавливаем фокус в конец текста
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(textElement);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
         
-        // Выделяем весь текст
-        input.select();
+        // Сохраняем текущее состояние
+        let isModified = false;
+        
+        // Слушатель изменений
+        const changeHandler = () => {
+            isModified = true;
+        };
+        
+        textElement.addEventListener('input', changeHandler);
+        
+        // Обработчик нажатия клавиш
+        const keyHandler = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                finishEditing(textElement, task, originalText, changeHandler, keyHandler);
+            } else if (e.key === 'Escape') {
+                textElement.textContent = originalText;
+                finishEditing(textElement, task, originalText, changeHandler, keyHandler);
+            }
+        };
+        
+        textElement.addEventListener('keydown', keyHandler);
+        
+        // Обработчик потери фокуса
+        const blurHandler = () => {
+            setTimeout(() => {
+                if (document.activeElement !== textElement && !textElement.contains(document.activeElement)) {
+                    finishEditing(textElement, task, originalText, changeHandler, keyHandler, blurHandler);
+                }
+            }, 100);
+        };
+        
+        textElement.addEventListener('blur', blurHandler);
+    }
+    
+    async function finishEditing(textElement, task, originalText, changeHandler, keyHandler, blurHandler) {
+        const newText = textElement.textContent.trim();
+        
+        // Убираем редактируемость
+        textElement.contentEditable = false;
+        textElement.classList.remove('editing');
+        textElement.closest('.task').classList.remove('task-editing');
+        isEditing = false;
+        
+        // Удаляем обработчики
+        if (changeHandler) textElement.removeEventListener('input', changeHandler);
+        if (keyHandler) textElement.removeEventListener('keydown', keyHandler);
+        if (blurHandler) textElement.removeEventListener('blur', blurHandler);
+        
+        // Обрабатываем результат
+        if (newText === '') {
+            // Если текст пустой - удаляем задачу
+            if (confirm('Удалить задачу?')) {
+                await supabase.from('tasks').delete().eq('id', task.id);
+                loadDate();
+                loadDates();
+            } else {
+                // Восстанавливаем старый текст
+                textElement.textContent = originalText;
+            }
+        } else if (newText !== originalText) {
+            // Обновляем задачу
+            await supabase.from('tasks').update({ text: newText }).eq('id', task.id);
+            // Обновляем классы для длины текста
+            textElement.className = 'task-text';
+            if (newText.length > 50) textElement.classList.add('long');
+            if (newText.length > 100) textElement.classList.add('very-long');
+        }
     }
 
     async function addTask() {
