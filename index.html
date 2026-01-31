@@ -352,8 +352,8 @@
         if (phone.length < 10) return alert('Неверный формат номера');
 
         try {
-            // ✅ НАДЕЖНАЯ ОБРАБОТКА ДУБЛИКАТОВ
-            const {  userData, error: checkError } = await supabase
+            // ✅ Проверяем наличие пользователя
+            const {  user, error: checkError } = await supabase
                 .from('users')
                 .select('phone')
                 .eq('phone', phone)
@@ -362,7 +362,6 @@
             // Если пользователя нет — создаём
             if (checkError && checkError.code === 'PGRST116') {
                 const { error: insertError } = await supabase.from('users').insert({ phone });
-                // Игнорируем ошибку дубликата (23505) — это нормально при одновременных запросах
                 if (insertError && insertError.code !== '23505') {
                     throw insertError;
                 }
@@ -426,16 +425,16 @@
         const dateKey = formatDateKey(currentDate);
         document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
 
-        // ✅ ИСПРАВЛЕНО: правильная деструктуризация
-        const {  tasks, error } = await supabase
+        // ✅ ПРАВИЛЬНАЯ ДЕСТРУКТУРИЗАЦИЯ - ИСПРАВЛЕНО!
+        const { data, error } = await supabase
             .from('tasks')
             .select('*')
             .eq('phone', currentPhone)
             .eq('date_key', dateKey)
-            .order('created_at');
+            .order('created_at', { ascending: true });
 
         if (error) {
-            console.error('Ошибка задач:', error);
+            console.error('❌ Ошибка загрузки задач:', error);
             document.getElementById('taskList').innerHTML = '<div class="empty">Ошибка загрузки</div>';
             return;
         }
@@ -443,16 +442,19 @@
         const container = document.getElementById('taskList');
         container.innerHTML = '';
 
+        console.log('📱 currentPhone:', currentPhone);
+        console.log('📅 dateKey:', dateKey);
+        console.log('📊 Задачи из базы:', data);
+
         // ✅ Проверка на пустой массив
-        if (!tasks || tasks.length === 0) {
+        if (!data || data.length === 0) {
             container.innerHTML = '<div class="empty">Пока задач нет 😌</div>';
             return;
         }
 
-        // Отладочный лог
-        console.log(`✅ Загружено ${tasks.length} задач на ${dateKey} для ${currentPhone}`);
+        console.log(`✅ Загружено ${data.length} задач`);
 
-        tasks.forEach((task, i) => {
+        data.forEach((task, i) => {
             const taskEl = document.createElement('div');
             taskEl.className = 'task';
             taskEl.dataset.index = i;
@@ -465,7 +467,7 @@
                 e.stopPropagation();
                 if (confirm('Удалить задачу?')) {
                     await supabase.from('tasks').delete().eq('id', task.id);
-                    if (currentTaskIndex >= tasks.length - 1 && currentTaskIndex > 0) currentTaskIndex--;
+                    if (currentTaskIndex >= data.length - 1 && currentTaskIndex > 0) currentTaskIndex--;
                     loadDate();
                     loadDates();
                 }
@@ -549,16 +551,13 @@
     function startEditing(textElement, task) {
         const originalText = textElement.textContent;
         
-        // Делаем элемент редактируемым
         textElement.contentEditable = true;
         textElement.classList.add('editing');
         
-        // Подсвечиваем родительскую карточку
         const taskEl = textElement.closest('.task');
         taskEl.classList.add('task-editing');
         isEditing = true;
         
-        // Устанавливаем фокус в конец текста
         const range = document.createRange();
         const sel = window.getSelection();
         range.selectNodeContents(textElement);
@@ -566,17 +565,14 @@
         sel.removeAllRanges();
         sel.addRange(range);
         
-        // Сохраняем текущее состояние
         let isModified = false;
         
-        // Слушатель изменений
         const changeHandler = () => {
             isModified = true;
         };
         
         textElement.addEventListener('input', changeHandler);
         
-        // Обработчик нажатия клавиш
         const keyHandler = (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -589,7 +585,6 @@
         
         textElement.addEventListener('keydown', keyHandler);
         
-        // Обработчик потери фокуса
         const blurHandler = () => {
             setTimeout(() => {
                 if (document.activeElement !== textElement && !textElement.contains(document.activeElement)) {
@@ -604,32 +599,25 @@
     async function finishEditing(textElement, task, originalText, changeHandler, keyHandler, blurHandler) {
         const newText = textElement.textContent.trim();
         
-        // Убираем редактируемость
         textElement.contentEditable = false;
         textElement.classList.remove('editing');
         textElement.closest('.task').classList.remove('task-editing');
         isEditing = false;
         
-        // Удаляем обработчики
         if (changeHandler) textElement.removeEventListener('input', changeHandler);
         if (keyHandler) textElement.removeEventListener('keydown', keyHandler);
         if (blurHandler) textElement.removeEventListener('blur', blurHandler);
         
-        // Обрабатываем результат
         if (newText === '') {
-            // Если текст пустой - удаляем задачу
             if (confirm('Удалить задачу?')) {
                 await supabase.from('tasks').delete().eq('id', task.id);
                 loadDate();
                 loadDates();
             } else {
-                // Восстанавливаем старый текст
                 textElement.textContent = originalText;
             }
         } else if (newText !== originalText) {
-            // Обновляем задачу
             await supabase.from('tasks').update({ text: newText }).eq('id', task.id);
-            // Обновляем классы для длины текста
             textElement.className = 'task-text';
             if (newText.length > 50) textElement.classList.add('long');
             if (newText.length > 100) textElement.classList.add('very-long');
