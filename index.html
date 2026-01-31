@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Daily</title>
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg: #fdf6f6; --card: #ffffff; --accent: #ff6b6b; --text: #2c2c2c; }
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -37,6 +36,21 @@
         .task-status { font-size:3.4rem; width:68px; height:68px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .add-btn { position:fixed; bottom:36px; right:36px; width:78px; height:78px; border-radius:50%; background:var(--accent); color:white; font-size:3.2rem; border:none; box-shadow:0 12px 32px rgba(255,107,107,0.48); z-index:100; display:none; cursor:pointer; }
         .empty { text-align:center; color:#aaa; font-size:1.3rem; padding:80px 20px; }
+        
+        /* Стили для режима редактирования */
+        .task-editing { background:linear-gradient(135deg, #fff9e6, #ffffff); }
+        .task-input { 
+            flex:1; 
+            font-size:clamp(1.3rem, 6.2vw, 1.58rem); 
+            font-weight:500; 
+            line-height:1.48; 
+            border:none; 
+            outline:none; 
+            background:transparent; 
+            width:100%; 
+            padding-right:70px;
+            resize:none;
+        }
     </style>
 </head>
 <body>
@@ -68,7 +82,7 @@
     const SUPABASE_URL = 'https://qkhvvrwccubbufffiary.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraHZ2cndjY3ViYnVmZmZpYXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzQ1NzgsImV4cCI6MjA4NTM1MDU3OH0.0MBZApkMoLIhnQqKtQnfO8nyke9uTBqy21tYxBELJsI';
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
 
     let currentDate = new Date();
     let currentPhone = null;
@@ -217,7 +231,10 @@
             textSpan.textContent = task.text;
             if (task.text.length > 50) textSpan.classList.add('long');
             if (task.text.length > 100) textSpan.classList.add('very-long');
-            textSpan.onclick = () => editTask(task);
+            textSpan.onclick = (e) => {
+                e.stopPropagation();
+                startEditing(taskEl, task);
+            };
 
             const status = document.createElement('div');
             status.className = 'task-status';
@@ -279,20 +296,83 @@
         }
     });
 
-    async function editTask(task) {
-        const newText = prompt('Редактировать задачу:', task.text);
-        if (newText === null) return;
+    // Редактирование прямо в блоке
+    function startEditing(taskEl, task) {
+        const textSpan = taskEl.querySelector('.task-text');
+        const originalText = textSpan.textContent;
+        
+        // Создаем поле ввода
+        const input = document.createElement('textarea');
+        input.className = 'task-input';
+        input.value = originalText;
+        input.rows = 1;
+        input.style.height = 'auto';
+        
+        // Автоматически подгоняем высоту под содержимое
+        const adjustHeight = () => {
+            input.style.height = 'auto';
+            input.style.height = (input.scrollHeight) + 'px';
+        };
+        
+        input.addEventListener('input', adjustHeight);
+        adjustHeight();
 
-        if (newText.trim() === '') {
-            if (confirm('Удалить задачу?')) {
-                await supabase.from('tasks').delete().eq('id', task.id);
+        // Сохранение при потере фокуса
+        input.onblur = async () => {
+            const newText = input.value.trim();
+            
+            if (newText === '') {
+                // Если текст пустой - удаляем задачу
+                if (confirm('Удалить задачу?')) {
+                    await supabase.from('tasks').delete().eq('id', task.id);
+                    loadDate();
+                    loadDates();
+                } else {
+                    // Восстанавливаем старый текст
+                    textSpan.textContent = originalText;
+                    textSpan.style.display = 'block';
+                    input.remove();
+                    taskEl.classList.remove('task-editing');
+                }
+            } else if (newText !== originalText) {
+                // Обновляем задачу
+                await supabase.from('tasks').update({ text: newText }).eq('id', task.id);
                 loadDate();
-                loadDates();
+            } else {
+                // Ничего не изменилось
+                textSpan.textContent = originalText;
+                textSpan.style.display = 'block';
+                input.remove();
+                taskEl.classList.remove('task-editing');
             }
-        } else {
-            await supabase.from('tasks').update({ text: newText.trim() }).eq('id', task.id);
-            loadDate();
-        }
+        };
+
+        // Горячие клавиши
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                // Enter - сохранить (кроме Shift+Enter)
+                e.preventDefault();
+                input.blur();
+            }
+            if (e.key === 'Escape') {
+                // Escape - отменить
+                textSpan.textContent = originalText;
+                textSpan.style.display = 'block';
+                input.remove();
+                taskEl.classList.remove('task-editing');
+            }
+        };
+
+        // Заменяем текст на поле ввода
+        textSpan.style.display = 'none';
+        taskEl.insertBefore(input, textSpan);
+        taskEl.classList.add('task-editing');
+        
+        // Фокус на поле ввода
+        input.focus();
+        
+        // Выделяем весь текст
+        input.select();
     }
 
     async function addTask() {
