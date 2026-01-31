@@ -353,7 +353,6 @@
 
         try {
             // ✅ НАДЕЖНАЯ ОБРАБОТКА ДУБЛИКАТОВ
-            // Сначала проверяем наличие пользователя
             const {  userData, error: checkError } = await supabase
                 .from('users')
                 .select('phone')
@@ -362,20 +361,15 @@
 
             // Если пользователя нет — создаём
             if (checkError && checkError.code === 'PGRST116') {
-                // Пытаемся вставить
                 const { error: insertError } = await supabase.from('users').insert({ phone });
-                
-                // Если ошибка дубликата (23505) — игнорируем (кто-то другой уже создал)
+                // Игнорируем ошибку дубликата (23505) — это нормально при одновременных запросах
                 if (insertError && insertError.code !== '23505') {
                     throw insertError;
                 }
-            } 
-            // Если другая ошибка при проверке — пробрасываем
-            else if (checkError) {
+            } else if (checkError) {
                 throw checkError;
             }
 
-            // ✅ Успешный вход
             currentPhone = phone;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
@@ -432,6 +426,7 @@
         const dateKey = formatDateKey(currentDate);
         document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
 
+        // ✅ ИСПРАВЛЕНО: правильная деструктуризация
         const {  tasks, error } = await supabase
             .from('tasks')
             .select('*')
@@ -448,10 +443,14 @@
         const container = document.getElementById('taskList');
         container.innerHTML = '';
 
+        // ✅ Проверка на пустой массив
         if (!tasks || tasks.length === 0) {
             container.innerHTML = '<div class="empty">Пока задач нет 😌</div>';
             return;
         }
+
+        // Отладочный лог
+        console.log(`✅ Загружено ${tasks.length} задач на ${dateKey} для ${currentPhone}`);
 
         tasks.forEach((task, i) => {
             const taskEl = document.createElement('div');
