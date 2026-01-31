@@ -179,7 +179,7 @@
         const dateKey = formatDateKey(currentDate);
         document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
 
-        const {  tasks, error } = await supabase
+        const { data: tasks, error } = await supabase
             .from('tasks')
             .select('*')
             .eq('phone', currentPhone)
@@ -195,7 +195,7 @@
         const container = document.getElementById('taskList');
         container.innerHTML = '';
 
-        if (tasks.length === 0) {
+        if (!tasks || tasks.length === 0) {
             container.innerHTML = '<div class="empty">Пока задач нет 😌</div>';
             return;
         }
