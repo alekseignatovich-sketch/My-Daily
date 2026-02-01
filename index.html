@@ -230,48 +230,16 @@
         document.getElementById('dateTitle').textContent = '';
     }
 
-    // ✅ ИСПРАВЛЕНО: безопасная загрузка целей с обработкой ошибки колонки
+    // ✅ УПРОЩЁННАЯ ЗАГРУЗКА ГЛОБАЛЬНЫХ ЦЕЛЕЙ С ПОНЯТНЫМИ ИНСТРУКЦИЯМИ
     async function loadGlobalGoals() {
         if (!currentPhone) return;
         
         try {
-            // Сначала пробуем запросить с колонкой completed
-            let { data, error } = await supabase
+            const { data, error } = await supabase
                 .from('global_goals')
                 .select('id, text, completed')
                 .eq('phone', currentPhone)
                 .order('created_at', { ascending: true });
-            
-            // Если ошибка из-за отсутствия колонки 'completed' — создаём её автоматически
-            if (error && error.message.includes('column') && error.message.includes('completed')) {
-                console.warn('Колонка "completed" отсутствует. Создаём...');
-                
-                // Добавляем колонку в таблицу
-                const { error: alterError } = await supabase
-                    .rpc('execute_sql', { sql: "ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALSE;" });
-                
-                if (alterError) {
-                    console.error('Не удалось добавить колонку:', alterError);
-                    // Пробуем запросить без колонки completed
-                    ({ data, error } = await supabase
-                        .from('global_goals')
-                        .select('id, text')
-                        .eq('phone', currentPhone)
-                        .order('created_at', { ascending: true }));
-                    
-                    if (data) {
-                        // Добавляем поле completed=false для всех записей
-                        data = data.map(goal => ({ ...goal, completed: false }));
-                    }
-                } else {
-                    // Повторяем запрос после добавления колонки
-                    ({ data, error } = await supabase
-                        .from('global_goals')
-                        .select('id, text, completed')
-                        .eq('phone', currentPhone)
-                        .order('created_at', { ascending: true }));
-                }
-            }
             
             if (error) throw error;
             
@@ -279,13 +247,39 @@
             renderGlobalGoals();
         } catch (error) {
             console.error('Ошибка загрузки глобальных целей:', error);
-            globalGoals = [];
-            renderGlobalGoals();
+            const container = document.getElementById('goalsList');
             
-            // Показываем пользователю инструкцию
-            if (error.message.includes('column') && error.message.includes('completed')) {
-                alert('⚠️ Для работы глобальных целей требуется колонка "completed".\n\nСоздана автоматически. Обновите страницу.');
-                location.reload();
+            // ✅ ПОКАЗЫВАЕМ ПОНЯТНУЮ ИНСТРУКЦИЮ
+            if (error.message.includes('relation "global_goals" does not exist')) {
+                container.innerHTML = `
+                    <div style="padding:25px; text-align:left; color:#e74c3c; line-height:1.6;">
+                        <h3 style="margin-bottom:15px; font-size:1.4rem; color:#2c3e50;">⚠️ Таблица не создана</h3>
+                        <p style="margin-bottom:15px;">Выполните этот SQL-скрипт в <strong>Supabase → SQL Editor</strong>:</p>
+                        <pre style="background:#f8f9fa; padding:15px; border-radius:8px; font-size:0.85rem; overflow-x:auto; margin-bottom:20px; border-left:4px solid #ff6b6b;">
+CREATE TABLE IF NOT EXISTS global_goals (
+    id BIGSERIAL PRIMARY KEY,
+    phone TEXT NOT NULL,
+    text TEXT NOT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+ALTER TABLE global_goals DISABLE ROW LEVEL SECURITY;
+CREATE INDEX IF NOT EXISTS idx_global_goals_phone ON global_goals(phone);</pre>
+                        <button onclick="location.reload()" style="background:#ff6b6b; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;">Обновить после создания таблицы</button>
+                    </div>
+                `;
+            } else if (error.message.includes('column') && error.message.includes('completed')) {
+                container.innerHTML = `
+                    <div style="padding:25px; text-align:left; color:#e74c3c; line-height:1.6;">
+                        <h3 style="margin-bottom:15px; font-size:1.4rem; color:#2c3e50;">⚠️ Не хватает колонки</h3>
+                        <p style="margin-bottom:15px;">Добавьте колонку в таблицу через <strong>Supabase → SQL Editor</strong>:</p>
+                        <pre style="background:#f8f9fa; padding:15px; border-radius:8px; font-size:0.85rem; overflow-x:auto; margin-bottom:20px; border-left:4px solid #ff6b6b;">
+ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALSE;</pre>
+                        <button onclick="location.reload()" style="background:#ff6b6b; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;">Обновить после добавления колонки</button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `<div class="empty" style="padding:40px 20px">Ошибка: ${error.message}</div>`;
             }
         }
     }
@@ -384,55 +378,32 @@
         await loadGlobalGoals();
     }
     
+    // ✅ УПРОЩЁННОЕ ДОБАВЛЕНИЕ ЦЕЛИ С ПОНЯТНЫМИ ИНСТРУКЦИЯМИ
     async function addGlobalGoal() {
         const text = prompt('Новая глобальная цель:');
         if (!text || !text.trim()) return;
         
-        // ✅ ИСПРАВЛЕНО: используем только существующие колонки
-        const { error } = await supabase.from('global_goals').insert({
-            phone: currentPhone,
-            text: text.trim(),
-            completed: false
-        });
-        
-        if (error) {
-            // Если ошибка из-за колонки completed — создаём таблицу заново
-            if (error.message.includes('column') && error.message.includes('completed')) {
-                alert('⚠️ Таблица целей требует обновления.\nСоздаём правильную структуру...');
-                
-                // Создаём таблицу с правильной структурой
-                const { error: createError } = await supabase.rpc('execute_sql', { 
-                    sql: `
-                        CREATE TABLE IF NOT EXISTS global_goals (
-                            id BIGSERIAL PRIMARY KEY,
-                            phone TEXT NOT NULL,
-                            text TEXT NOT NULL,
-                            completed BOOLEAN DEFAULT FALSE,
-                            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-                        );
-                        ALTER TABLE global_goals DISABLE ROW LEVEL SECURITY;
-                        CREATE INDEX IF NOT EXISTS idx_global_goals_phone ON global_goals(phone);
-                    ` 
-                });
-                
-                if (createError) {
-                    alert('Ошибка создания таблицы: ' + createError.message);
-                    return;
-                }
-                
-                // Повторяем вставку
-                await supabase.from('global_goals').insert({
-                    phone: currentPhone,
-                    text: text.trim(),
-                    completed: false
-                });
+        try {
+            const { error } = await supabase.from('global_goals').insert({
+                phone: currentPhone,
+                text: text.trim(),
+                completed: false
+            });
+            
+            if (error) throw error;
+            
+            await loadGlobalGoals();
+        } catch (error) {
+            console.error('Ошибка добавления цели:', error);
+            
+            if (error.message.includes('relation "global_goals" does not exist')) {
+                alert('⚠️ Таблица "global_goals" не создана!\n\n1. Откройте Supabase → SQL Editor\n2. Выполните скрипт из модального окна целей\n3. Обновите страницу');
+            } else if (error.message.includes('column') && error.message.includes('completed')) {
+                alert('⚠️ Не хватает колонки "completed"!\n\n1. Откройте Supabase → SQL Editor\n2. Выполните: ALTER TABLE global_goals ADD COLUMN completed BOOLEAN DEFAULT FALSE;\n3. Обновите страницу');
             } else {
                 alert('Ошибка: ' + error.message);
-                return;
             }
         }
-        
-        await loadGlobalGoals();
     }
 
     async function login() {
@@ -480,7 +451,6 @@
         const container = document.getElementById('dateList');
         container.innerHTML = '';
 
-        // ✅ ПРАВИЛЬНАЯ ДЕСТРУКТУРИЗАЦИЯ + ПРОВЕРКА
         const { data, error } = await supabase
             .from('tasks')
             .select('date_key, completed')
@@ -492,7 +462,6 @@
             return;
         }
 
-        // ✅ ПРОВЕРКА НА СУЩЕСТВОВАНИЕ И МАССИВ
         const dateStatus = {};
         if (data && Array.isArray(data)) {
             data.forEach(task => {
@@ -547,7 +516,6 @@
         const dateKey = formatDateKey(currentDate);
         document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
 
-        // ✅ ПРАВИЛЬНАЯ ДЕСТРУКТУРИЗАЦИЯ
         const { data, error } = await supabase
             .from('tasks')
             .select('*')
