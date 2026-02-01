@@ -27,18 +27,19 @@
         .header-btn { 
             background:none; 
             border:none; 
-            font-size:1.8rem; 
+            font-size:1.4rem; 
             cursor:pointer; 
             color:#e74c3c; 
-            width:40px; 
+            width:50px; 
             height:40px; 
             display:flex; 
             align-items:center; 
             justify-content:center; 
-            border-radius:50%; 
+            border-radius:8px; 
             transition:all 0.2s; 
+            font-weight:bold;
         }
-        .header-btn:hover { background:rgba(231,76,60,0.1); transform:scale(1.1); }
+        .header-btn:hover { background:rgba(231,76,60,0.1); transform:scale(1.05); }
         .login-screen { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:999; }
         .login-form { background:white; padding:30px 20px; border-radius:20px; width:92%; max-width:380px; text-align:center; }
         .login-form h2 { font-family:'Permanent Marker',cursive; color:#e74c3c; font-size:2.4rem; margin-bottom:18px; }
@@ -119,7 +120,7 @@
         
         @media (max-width: 767px) {
             header { font-size:1.7rem; padding:12px 10px; }
-            .header-btn { font-size:1.6rem; width:36px; height:36px; }
+            .header-btn { font-size:1.3rem; width:45px; }
             .sidebar { width:80px; padding:8px 3px; }
             .date-btn { font-size:0.7rem; padding:7px 2px; margin:2px 0; }
             .goals-content { padding:20px; }
@@ -130,7 +131,7 @@
             .goal-item { padding:12px 35px 12px 40px; font-size:1.1rem; }
         }
         @media (min-width: 768px) {
-            .header-btn { font-size:2.0rem; width:44px; height:44px; }
+            .header-btn { font-size:1.5rem; width:55px; }
             .goals-content { max-width:600px; padding:40px; }
             .goals-title { font-size:2.6rem; }
         }
@@ -150,7 +151,7 @@
     <div class="header-title">My Daily</div>
     <div class="header-actions">
         <button class="header-btn" id="goalsBtn" title="Глобальные цели">🎯</button>
-        <button class="header-btn" id="logoutBtn" title="Выйти">🚪</button>
+        <button class="header-btn" id="logoutBtn" title="Выйти">Выход</button>
     </div>
 </header>
 
@@ -229,22 +230,64 @@
         document.getElementById('dateTitle').textContent = '';
     }
 
+    // ✅ ИСПРАВЛЕНО: безопасная загрузка целей с обработкой ошибки колонки
     async function loadGlobalGoals() {
         if (!currentPhone) return;
         
-        const { data, error } = await supabase
-            .from('global_goals')
-            .select('id, text, completed')
-            .eq('phone', currentPhone)
-            .order('created_at', { ascending: true });
-        
-        if (error) {
-            console.error('Ошибка загрузки целей:', error);
-            return;
+        try {
+            // Сначала пробуем запросить с колонкой completed
+            let { data, error } = await supabase
+                .from('global_goals')
+                .select('id, text, completed')
+                .eq('phone', currentPhone)
+                .order('created_at', { ascending: true });
+            
+            // Если ошибка из-за отсутствия колонки 'completed' — создаём её автоматически
+            if (error && error.message.includes('column') && error.message.includes('completed')) {
+                console.warn('Колонка "completed" отсутствует. Создаём...');
+                
+                // Добавляем колонку в таблицу
+                const { error: alterError } = await supabase
+                    .rpc('execute_sql', { sql: "ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALSE;" });
+                
+                if (alterError) {
+                    console.error('Не удалось добавить колонку:', alterError);
+                    // Пробуем запросить без колонки completed
+                    ({ data, error } = await supabase
+                        .from('global_goals')
+                        .select('id, text')
+                        .eq('phone', currentPhone)
+                        .order('created_at', { ascending: true }));
+                    
+                    if (data) {
+                        // Добавляем поле completed=false для всех записей
+                        data = data.map(goal => ({ ...goal, completed: false }));
+                    }
+                } else {
+                    // Повторяем запрос после добавления колонки
+                    ({ data, error } = await supabase
+                        .from('global_goals')
+                        .select('id, text, completed')
+                        .eq('phone', currentPhone)
+                        .order('created_at', { ascending: true }));
+                }
+            }
+            
+            if (error) throw error;
+            
+            globalGoals = data || [];
+            renderGlobalGoals();
+        } catch (error) {
+            console.error('Ошибка загрузки глобальных целей:', error);
+            globalGoals = [];
+            renderGlobalGoals();
+            
+            // Показываем пользователю инструкцию
+            if (error.message.includes('column') && error.message.includes('completed')) {
+                alert('⚠️ Для работы глобальных целей требуется колонка "completed".\n\nСоздана автоматически. Обновите страницу.');
+                location.reload();
+            }
         }
-        
-        globalGoals = data || [];
-        renderGlobalGoals();
     }
     
     function renderGlobalGoals() {
@@ -345,6 +388,7 @@
         const text = prompt('Новая глобальная цель:');
         if (!text || !text.trim()) return;
         
+        // ✅ ИСПРАВЛЕНО: используем только существующие колонки
         const { error } = await supabase.from('global_goals').insert({
             phone: currentPhone,
             text: text.trim(),
@@ -352,8 +396,40 @@
         });
         
         if (error) {
-            alert('Ошибка: ' + error.message);
-            return;
+            // Если ошибка из-за колонки completed — создаём таблицу заново
+            if (error.message.includes('column') && error.message.includes('completed')) {
+                alert('⚠️ Таблица целей требует обновления.\nСоздаём правильную структуру...');
+                
+                // Создаём таблицу с правильной структурой
+                const { error: createError } = await supabase.rpc('execute_sql', { 
+                    sql: `
+                        CREATE TABLE IF NOT EXISTS global_goals (
+                            id BIGSERIAL PRIMARY KEY,
+                            phone TEXT NOT NULL,
+                            text TEXT NOT NULL,
+                            completed BOOLEAN DEFAULT FALSE,
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                        );
+                        ALTER TABLE global_goals DISABLE ROW LEVEL SECURITY;
+                        CREATE INDEX IF NOT EXISTS idx_global_goals_phone ON global_goals(phone);
+                    ` 
+                });
+                
+                if (createError) {
+                    alert('Ошибка создания таблицы: ' + createError.message);
+                    return;
+                }
+                
+                // Повторяем вставку
+                await supabase.from('global_goals').insert({
+                    phone: currentPhone,
+                    text: text.trim(),
+                    completed: false
+                });
+            } else {
+                alert('Ошибка: ' + error.message);
+                return;
+            }
         }
         
         await loadGlobalGoals();
@@ -390,7 +466,6 @@
             document.getElementById('mainContent').style.display = 'block';
             document.getElementById('addBtn').style.display = 'block';
 
-            // ✅ ИСПРАВЛЕНО: обработка ошибок при загрузке данных
             try { await loadDates(); } catch (e) { console.error('Ошибка загрузки дат:', e); }
             try { await loadDate(); } catch (e) { console.error('Ошибка загрузки задач:', e); }
             try { await loadGlobalGoals(); } catch (e) { console.error('Ошибка загрузки целей:', e); }
