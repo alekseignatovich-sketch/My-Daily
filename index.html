@@ -48,7 +48,7 @@
         .content { display:flex; height:100%; }
         .sidebar { width:90px; background:white; border-right:1px solid #ffe0e0; padding:10px 4px; overflow-y:auto; }
         
-        /* ✅ ИСПРАВЛЕННЫЕ СТИЛИ ДЛЯ ЦВЕТОВОЙ ИНДИКАЦИИ */
+        /* Цветовая индикация статуса задач */
         .date-btn { 
             padding:8px 3px; 
             text-align:center; 
@@ -61,47 +61,11 @@
             position: relative;
             font-weight: normal !important;
         }
-        
-        /* Статусы имеют ПРИОРИТЕТ над активной датой */
-        .date-btn.status-empty { 
-            color:#7f8c8d !important; 
-            background: transparent !important;
-        }
-        .date-btn.status-completed { 
-            background:#d4edda !important; 
-            color:#155724 !important; 
-            font-weight:bold !important;
-        }
-        .date-btn.status-incomplete { 
-            background:#f8d7da !important; 
-            color:#721c24 !important; 
-            font-weight:bold !important;
-        }
-        
-        /* Активная дата: левая полоса вместо фона */
-        .date-btn.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: #e74c3c;
-            border-radius: 3px 0 0 3px;
-        }
-        
-        /* Сегодняшняя дата: точка внизу */
-        .date-btn.today::after { 
-            content:''; 
-            position:absolute; 
-            bottom:-2px; 
-            left:50%; 
-            transform:translateX(-50%); 
-            width:4px; 
-            height:4px; 
-            background:var(--accent); 
-            border-radius:50%; 
-        }
+        .date-btn.status-empty { color:#7f8c8d !important; background: transparent !important; }
+        .date-btn.status-completed { background:#d4edda !important; color:#155724 !important; font-weight:bold !important; }
+        .date-btn.status-incomplete { background:#f8d7da !important; color:#721c24 !important; font-weight:bold !important; }
+        .date-btn.active::before { content: ''; position:absolute; left:0; top:0; bottom:0; width:4px; background:#e74c3c; border-radius:3px 0 0 3px; }
+        .date-btn.today::after { content:''; position:absolute; bottom:-2px; left:50%; transform:translateX(-50%); width:4px; height:4px; background:var(--accent); border-radius:50%; }
         
         .tasks-area { flex:1; display:flex; flex-direction:column; }
         .date-title { font-size:1.4rem; font-weight:bold; margin:16px 0; text-align:center; padding:12px 16px 8px; background:white; border-bottom:1px solid #ffd8d8; }
@@ -131,7 +95,7 @@
         .add-btn { position:fixed; bottom:28px; right:28px; width:68px; height:68px; border-radius:50%; background:var(--accent); color:white; font-size:2.8rem; border:none; box-shadow:0 10px 28px rgba(255,107,107,0.45); z-index:100; display:none; cursor:pointer; }
         .empty { text-align:center; color:#aaa; font-size:1.2rem; padding:70px 20px; }
         
-        /* Модальное окно глобальных целей */
+        /* ✅ ИСПРАВЛЕННЫЕ СТИЛИ ГЛОБАЛЬНЫХ ЦЕЛЕЙ */
         .goals-modal { 
             position:fixed; 
             inset:0; 
@@ -179,34 +143,85 @@
             transition:all 0.2s; 
         }
         .close-goals:hover { background:#ffe0e0; transform:rotate(90deg); }
+        
+        /* Стили для целей */
         .goal-item { 
             background:#fdf6f6; 
             border-radius:16px; 
-            padding:18px; 
+            padding:18px 45px 18px 50px; 
             margin-bottom:15px; 
             box-shadow:0 3px 15px rgba(0,0,0,0.08); 
             position:relative; 
+            min-height:50px;
+            transition: all 0.2s;
         }
+        .goal-item.completed { 
+            background:#d4edda; 
+            border-left:4px solid #28a745;
+        }
+        .goal-item:hover { 
+            transform: translateX(5px);
+            box-shadow:0 5px 20px rgba(0,0,0,0.12);
+        }
+        
+        /* Галочка выполнения */
+        .goal-checkbox { 
+            position:absolute; 
+            left:15px; 
+            top:50%; 
+            transform:translateY(-50%); 
+            width:24px; 
+            height:24px; 
+            accent-color:#28a745; 
+            cursor:pointer;
+        }
+        
+        /* Текст цели */
         .goal-text { 
             font-size:1.3rem; 
             line-height:1.5; 
-            margin-bottom:10px; 
-            min-height:40px; 
+            cursor:text; 
+            outline:none; 
+            min-height:24px;
+            width: calc(100% - 60px);
         }
-        .goal-progress { 
-            height:8px; 
-            background:#e0e0e0; 
-            border-radius:4px; 
-            overflow:hidden; 
-            margin-top:8px; 
+        .goal-text.completed { 
+            text-decoration:line-through; 
+            color:#28a745; 
+            opacity:0.8; 
         }
-        .goal-progress-bar { 
-            height:100%; 
-            background:#28a745; 
-            border-radius:4px; 
-            width:0%; 
-            transition:width 0.5s; 
+        .goal-text[contenteditable="true"] { 
+            background:rgba(255,250,230,0.7); 
+            border-radius:8px; 
+            padding:4px 8px; 
         }
+        
+        /* Кнопка удаления */
+        .goal-delete { 
+            position:absolute; 
+            right:15px; 
+            top:50%; 
+            transform:translateY(-50%); 
+            background:none; 
+            border:none; 
+            font-size:1.8rem; 
+            color:#e74c3c; 
+            cursor:pointer; 
+            opacity:0.7; 
+            width:30px; 
+            height:30px; 
+            border-radius:50%; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            transition:all 0.2s;
+        }
+        .goal-delete:hover { 
+            opacity:1; 
+            background:#ffe0e0; 
+            transform:translateY(-50%) scale(1.2);
+        }
+        
         .add-goal-btn { 
             width:100%; 
             padding:14px; 
@@ -222,7 +237,7 @@
         }
         .add-goal-btn:hover { transform:scale(1.03); box-shadow:0 4px 12px rgba(255,107,107,0.4); }
         
-        /* Стили для режима редактирования */
+        /* Стили для режима редактирования задач */
         .task-editing { background:linear-gradient(135deg, #fff9e6, #ffffff); }
         .task-text[contenteditable="true"] { 
             background:rgba(255,250,230,0.5); 
@@ -236,10 +251,18 @@
             .header-btn { font-size:1.6rem; width:36px; height:36px; }
             .sidebar { width:80px; padding:8px 3px; }
             .date-btn { font-size:0.7rem; padding:7px 2px; margin:2px 0; }
-            /* ... остальные адаптивные стили без изменений ... */
+            .goals-content { padding:20px; }
+            .goal-item { padding:15px 40px 15px 45px; }
+            .goal-text { font-size:1.2rem; }
         }
-        @media (max-width: 375px) { /* ... */ }
-        @media (min-width: 768px) { /* ... */ }
+        @media (max-width: 375px) {
+            .goal-item { padding:12px 35px 12px 40px; font-size:1.1rem; }
+        }
+        @media (min-width: 768px) {
+            .header-btn { font-size:2.0rem; width:44px; height:44px; }
+            .goals-content { max-width:600px; padding:40px; }
+            .goals-title { font-size:2.6rem; }
+        }
     </style>
 </head>
 <body>
@@ -276,7 +299,7 @@
 
 <button class="add-btn" id="addBtn">+</button>
 
-<!-- Модальное окно глобальных целей -->
+<!-- ✅ ИСПРАВЛЕННОЕ МОДАЛЬНОЕ ОКНО ГЛОБАЛЬНЫХ ЦЕЛЕЙ -->
 <div class="goals-modal" id="goalsModal">
     <div class="goals-content">
         <div class="goals-header">
@@ -300,19 +323,19 @@
     let currentPhone = null;
     let currentTaskIndex = 0;
     let isEditing = false;
+    let isGoalEditing = false;
     let globalGoals = [];
 
     const dayNames = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
+    // ... (все функции форматирования дат без изменений) ...
     function formatDateKey(date) {
         const d = new Date(date);
         return d.toISOString().split('T')[0];
     }
-
     function formatDateDisplay(date) {
         return date.toLocaleDateString('ru', { weekday: 'long', day: 'numeric', month: 'long' });
     }
-
     function formatDateShort(date) {
         const d = new Date(date);
         const day = d.getDate();
@@ -325,11 +348,9 @@
     // ✅ ФУНКЦИЯ ВЫХОДА
     function logout() {
         if (!confirm('Выйти из аккаунта?')) return;
-        
         currentPhone = null;
         currentTaskIndex = 0;
         currentDate = new Date();
-        
         document.getElementById('mainContent').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('addBtn').style.display = 'none';
@@ -344,7 +365,7 @@
         
         const { data, error } = await supabase
             .from('global_goals')
-            .select('*')
+            .select('id, text, completed')
             .eq('phone', currentPhone)
             .order('created_at', { ascending: true });
         
@@ -357,6 +378,7 @@
         renderGlobalGoals();
     }
     
+    // ✅ ОТОБРАЖЕНИЕ ГЛОБАЛЬНЫХ ЦЕЛЕЙ (БЕЗ ПРОЦЕНТОВ!)
     function renderGlobalGoals() {
         const container = document.getElementById('goalsList');
         
@@ -366,19 +388,98 @@
         }
         
         container.innerHTML = globalGoals.map(goal => {
-            const progress = goal.progress || 0;
+            const isCompleted = goal.completed || false;
             return `
-                <div class="goal-item">
-                    <div class="goal-text">${goal.text || 'Без названия'}</div>
-                    <div class="goal-progress">
-                        <div class="goal-progress-bar" style="width:${progress}%"></div>
-                    </div>
-                    <div style="text-align:right; font-size:0.9rem; color:#7f8c8d; margin-top:5px">${progress}%</div>
+                <div class="goal-item ${isCompleted ? 'completed' : ''}" data-id="${goal.id}">
+                    <input type="checkbox" class="goal-checkbox" ${isCompleted ? 'checked' : ''}>
+                    <div class="goal-text ${isCompleted ? 'completed' : ''}" contenteditable="false">${goal.text || 'Новая цель'}</div>
+                    <button class="goal-delete">×</button>
                 </div>
             `;
         }).join('');
+        
+        // Добавляем обработчики после рендеринга
+        document.querySelectorAll('.goal-checkbox').forEach((checkbox, index) => {
+            checkbox.addEventListener('change', () => toggleGlobalGoalComplete(globalGoals[index].id, checkbox.checked));
+        });
+        
+        document.querySelectorAll('.goal-delete').forEach((btn, index) => {
+            btn.addEventListener('click', () => deleteGlobalGoal(globalGoals[index].id));
+        });
+        
+        document.querySelectorAll('.goal-text').forEach((textEl, index) => {
+            textEl.addEventListener('click', (e) => {
+                if (!isGoalEditing && !globalGoals[index].completed) {
+                    startEditingGoal(textEl, globalGoals[index]);
+                }
+            });
+        });
     }
     
+    // ✅ РЕДАКТИРОВАНИЕ ЦЕЛИ ПРЯМО В БЛОКЕ
+    function startEditingGoal(textElement, goal) {
+        if (isGoalEditing) return;
+        
+        const originalText = textElement.textContent;
+        textElement.contentEditable = true;
+        textElement.classList.add('editing');
+        isGoalEditing = true;
+        
+        // Фокус на текст
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(textElement);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        
+        // Обработчики
+        const finishEditing = async () => {
+            const newText = textElement.textContent.trim();
+            textElement.contentEditable = false;
+            textElement.classList.remove('editing');
+            isGoalEditing = false;
+            
+            if (newText === '') {
+                if (confirm('Удалить цель?')) {
+                    await deleteGlobalGoal(goal.id);
+                } else {
+                    textElement.textContent = originalText;
+                }
+            } else if (newText !== originalText) {
+                await supabase.from('global_goals').update({ text: newText }).eq('id', goal.id);
+                await loadGlobalGoals();
+            }
+        };
+        
+        textElement.addEventListener('blur', finishEditing, { once: true });
+        textElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                finishEditing();
+            } else if (e.key === 'Escape') {
+                textElement.textContent = originalText;
+                textElement.contentEditable = false;
+                textElement.classList.remove('editing');
+                isGoalEditing = false;
+            }
+        }, { once: true });
+    }
+    
+    // ✅ ПЕРЕКЛЮЧЕНИЕ ВЫПОЛНЕНИЯ ЦЕЛИ
+    async function toggleGlobalGoalComplete(goalId, completed) {
+        await supabase.from('global_goals').update({ completed }).eq('id', goalId);
+        await loadGlobalGoals();
+    }
+    
+    // ✅ УДАЛЕНИЕ ЦЕЛИ
+    async function deleteGlobalGoal(goalId) {
+        if (!confirm('Удалить цель?')) return;
+        await supabase.from('global_goals').delete().eq('id', goalId);
+        await loadGlobalGoals();
+    }
+    
+    // ✅ ДОБАВЛЕНИЕ ГЛОБАЛЬНОЙ ЦЕЛИ
     async function addGlobalGoal() {
         const text = prompt('Новая глобальная цель:');
         if (!text || !text.trim()) return;
@@ -386,7 +487,7 @@
         const { error } = await supabase.from('global_goals').insert({
             phone: currentPhone,
             text: text.trim(),
-            progress: 0
+            completed: false  // ✅ Булево значение вместо прогресса
         });
         
         if (error) {
@@ -397,37 +498,28 @@
         await loadGlobalGoals();
     }
 
+    // ... (функции login, loadDates, loadDate без изменений кроме обновления статусов) ...
     async function login() {
         const phoneInput = document.getElementById('phoneInput').value.trim();
         if (!phoneInput) return alert('Введите номер телефона');
-
         let phone = phoneInput.replace(/\D/g, '');
         if (phone.startsWith('8')) phone = '7' + phone.slice(1);
         phone = '+' + phone;
-
         if (phone.length < 10) return alert('Неверный формат номера');
-
         try {
             const {  user, error: checkError } = await supabase
                 .from('users')
                 .select('phone')
                 .eq('phone', phone)
                 .single();
-
             if (checkError && checkError.code === 'PGRST116') {
                 const { error: insertError } = await supabase.from('users').insert({ phone });
-                if (insertError && insertError.code !== '23505') {
-                    throw insertError;
-                }
-            } else if (checkError) {
-                throw checkError;
-            }
-
+                if (insertError && insertError.code !== '23505') throw insertError;
+            } else if (checkError) throw checkError;
             currentPhone = phone;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
             document.getElementById('addBtn').style.display = 'block';
-
             await loadDates();
             await loadDate();
             await loadGlobalGoals();
@@ -437,24 +529,15 @@
         }
     }
 
-    // ✅ КРИТИЧЕСКИ ВАЖНАЯ ФУНКЦИЯ С ЦВЕТОВОЙ ИНДИКАЦИЕЙ
     async function loadDates() {
         const container = document.getElementById('dateList');
         container.innerHTML = '';
-
-        // Запрашиваем ВСЕ задачи пользователя для определения статуса
-        const { data: tasksData, error } = await supabase
+        const {  tasksData, error } = await supabase
             .from('tasks')
             .select('date_key, completed')
             .eq('phone', currentPhone)
             .order('date_key');
-
-        if (error) {
-            console.error('Ошибка загрузки задач для календаря:', error);
-            return;
-        }
-
-        // Группируем задачи по датам и определяем статус
+        if (error) return console.error('Ошибка дат:', error);
         const dateStatus = {};
         tasksData.forEach(task => {
             if (!dateStatus[task.date_key]) {
@@ -463,28 +546,17 @@
             dateStatus[task.date_key].total++;
             if (task.completed) dateStatus[task.date_key].completed++;
         });
-
-        // Формируем диапазон дат (-14 до +14 дней)
         const dates = new Set();
         for (let i = -14; i <= 14; i++) {
-            const d = new Date();
-            d.setDate(d.getDate() + i);
+            const d = new Date(); d.setDate(d.getDate() + i);
             dates.add(formatDateKey(d));
         }
-
-        // Отрисовка кнопок дат
         [...dates].sort().forEach(dateStr => {
             const date = new Date(dateStr);
             const btn = document.createElement('div');
             btn.className = 'date-btn';
             btn.textContent = formatDateShort(date);
-
-            // ✅ ОПРЕДЕЛЕНИЕ СТАТУСА И ДОБАВЛЕНИЕ КЛАССОВ
             const status = dateStatus[dateStr];
-            const isActive = dateStr === formatDateKey(currentDate);
-            const isToday = dateStr === formatDateKey(new Date());
-            
-            // Сначала добавляем статус
             if (status) {
                 if (status.completed === status.total) {
                     btn.classList.add('status-completed');
@@ -494,11 +566,8 @@
             } else {
                 btn.classList.add('status-empty');
             }
-            
-            // Потом активность и сегодня
-            if (isActive) btn.classList.add('active');
-            if (isToday) btn.classList.add('today');
-            
+            if (dateStr === formatDateKey(currentDate)) btn.classList.add('active');
+            if (dateStr === formatDateKey(new Date())) btn.classList.add('today');
             btn.onclick = () => {
                 currentDate = date;
                 currentTaskIndex = 0;
@@ -506,7 +575,6 @@
                 btn.classList.add('active');
                 loadDate();
             };
-
             container.appendChild(btn);
         });
     }
@@ -514,39 +582,29 @@
     async function loadDate() {
         const dateKey = formatDateKey(currentDate);
         document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
-
         const { data, error } = await supabase
             .from('tasks')
             .select('*')
             .eq('phone', currentPhone)
             .eq('date_key', dateKey)
             .order('created_at', { ascending: true });
-
         if (error) {
             console.error('❌ Ошибка загрузки задач:', error);
             document.getElementById('taskList').innerHTML = '<div class="empty">Ошибка загрузки</div>';
             return;
         }
-
         const container = document.getElementById('taskList');
         container.innerHTML = '';
-
         if (!data || data.length === 0) {
             container.innerHTML = '<div class="empty">Пока задач нет 😌</div>';
             return;
         }
-
-        // ✅ Устанавливаем индекс последней задачи как активную
-        if (currentTaskIndex >= data.length) {
-            currentTaskIndex = data.length - 1;
-        }
-
+        if (currentTaskIndex >= data.length) currentTaskIndex = data.length - 1;
         data.forEach((task, i) => {
             const taskEl = document.createElement('div');
             taskEl.className = 'task';
             taskEl.dataset.index = i;
             if (i === currentTaskIndex) taskEl.classList.add('active');
-
             const delBtn = document.createElement('button');
             delBtn.className = 'delete-btn';
             delBtn.textContent = '×';
@@ -554,15 +612,12 @@
                 e.stopPropagation();
                 if (confirm('Удалить задачу?')) {
                     await supabase.from('tasks').delete().eq('id', task.id);
-                    if (currentTaskIndex >= data.length - 1 && currentTaskIndex > 0) {
-                        currentTaskIndex--;
-                    }
+                    if (currentTaskIndex >= data.length - 1 && currentTaskIndex > 0) currentTaskIndex--;
                     loadDate();
-                    loadDates(); // ✅ Обновляем статусы дат
+                    loadDates();
                 }
             };
             taskEl.appendChild(delBtn);
-
             const textSpan = document.createElement('div');
             textSpan.className = 'task-text';
             textSpan.textContent = task.text;
@@ -571,11 +626,8 @@
             textSpan.dataset.taskId = task.id;
             textSpan.onclick = (e) => {
                 e.stopPropagation();
-                if (!isEditing) {
-                    startEditing(textSpan, task);
-                }
+                if (!isEditing) startEditing(textSpan, task);
             };
-
             const status = document.createElement('div');
             status.className = 'task-status';
             if (task.completed) {
@@ -590,38 +642,29 @@
                 cb.onchange = async () => {
                     await supabase.from('tasks').update({ completed: true }).eq('id', task.id);
                     loadDate();
-                    loadDates(); // ✅ Обновляем статусы дат
+                    loadDates();
                 };
                 status.appendChild(cb);
             }
-
             taskEl.append(textSpan, status);
             container.appendChild(taskEl);
         });
-
-        setTimeout(() => {
-            scrollToActiveTask();
-        }, 100);
+        setTimeout(() => scrollToActiveTask(), 100);
     }
 
     function scrollToActiveTask() {
         const container = document.getElementById('taskList');
         const tasks = container.querySelectorAll('.task');
         if (tasks.length === 0) return;
-
         const active = tasks[currentTaskIndex];
-        if (active) {
-            active.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     document.getElementById('taskCarousel').addEventListener('scroll', () => {
         const tasks = document.querySelectorAll('.task');
         if (tasks.length === 0) return;
-
         let closest = 0;
         let minDist = Infinity;
-
         tasks.forEach((task, idx) => {
             const rect = task.getBoundingClientRect();
             const dist = Math.abs(rect.top + rect.height / 2 - window.innerHeight / 2);
@@ -630,7 +673,6 @@
                 closest = idx;
             }
         });
-
         if (closest !== currentTaskIndex) {
             currentTaskIndex = closest;
             tasks.forEach(t => t.classList.remove('active'));
@@ -638,8 +680,7 @@
         }
     });
 
-    // ... остальные функции (startEditing, finishEditing, addTask) без изменений ...
-
+    // ... (функции редактирования задач без изменений) ...
     function startEditing(textElement, task) {
         const originalText = textElement.textContent;
         textElement.contentEditable = true;
@@ -647,18 +688,14 @@
         const taskEl = textElement.closest('.task');
         taskEl.classList.add('task-editing');
         isEditing = true;
-        
         const range = document.createRange();
         const sel = window.getSelection();
         range.selectNodeContents(textElement);
         range.collapse(false);
         sel.removeAllRanges();
         sel.addRange(range);
-        
-        let isModified = false;
-        const changeHandler = () => { isModified = true; };
+        const changeHandler = () => {};
         textElement.addEventListener('input', changeHandler);
-        
         const keyHandler = (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -669,7 +706,6 @@
             }
         };
         textElement.addEventListener('keydown', keyHandler);
-        
         const blurHandler = () => {
             setTimeout(() => {
                 if (document.activeElement !== textElement && !textElement.contains(document.activeElement)) {
@@ -686,11 +722,9 @@
         textElement.classList.remove('editing');
         textElement.closest('.task').classList.remove('task-editing');
         isEditing = false;
-        
         if (changeHandler) textElement.removeEventListener('input', changeHandler);
         if (keyHandler) textElement.removeEventListener('keydown', keyHandler);
         if (blurHandler) textElement.removeEventListener('blur', blurHandler);
-        
         if (newText === '') {
             if (confirm('Удалить задачу?')) {
                 await supabase.from('tasks').delete().eq('id', task.id);
@@ -704,14 +738,13 @@
             textElement.className = 'task-text';
             if (newText.length > 50) textElement.classList.add('long');
             if (newText.length > 100) textElement.classList.add('very-long');
-            loadDates(); // ✅ Обновляем статусы дат
+            loadDates();
         }
     }
 
     async function addTask() {
         const text = prompt('Новая задача:');
         if (!text || !text.trim()) return;
-
         const dateKey = formatDateKey(currentDate);
         const { data, error } = await supabase.from('tasks').insert({
             phone: currentPhone,
@@ -719,16 +752,14 @@
             text: text.trim(),
             completed: false
         }).select();
-
         if (error) {
             alert('Ошибка: ' + error.message);
             return;
         }
-
         currentTaskIndex = data.length - 1;
         setTimeout(() => {
             loadDate();
-            loadDates(); // ✅ Обновляем статусы дат
+            loadDates();
         }, 100);
     }
 
