@@ -8,54 +8,69 @@
     <style>
         :root { --bg: #fdf6f6; --card: #ffffff; --accent: #ff6b6b; --text: #2c2c2c; }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+        body { font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; height:100vh; }
         header { 
-            padding:16px 12px; 
+            padding:12px 10px; 
             background:linear-gradient(135deg,#ffeef4,#fff5e6); 
             font-family:'Permanent Marker',cursive; 
-            font-size:2.0rem; 
+            font-size:1.8rem; 
             text-align:center; 
             color:#e74c3c; 
-            text-shadow:3px 3px 0 #fff; 
+            text-shadow:2px 2px 0 #fff; 
             display:flex; 
             justify-content:space-between; 
             align-items:center; 
-            position:relative;
+            position:sticky; /* ✅ ЗАКРЕПЛЕНО ВВЕРХУ */
+            top:0;
+            z-index:200;
+            box-shadow:0 2px 10px rgba(0,0,0,0.1);
         }
-        .header-title { flex:1; text-align:center; }
-        .header-actions { position:absolute; right:12px; display:flex; gap:8px; }
+        .header-title { flex:1; text-align:center; font-size:1.7rem; }
+        .header-actions { position:absolute; right:10px; display:flex; gap:6px; }
         .header-btn { 
             background:none; 
             border:none; 
-            font-size:1.4rem; 
+            font-size:1.6rem; 
             cursor:pointer; 
             color:#e74c3c; 
-            width:50px; 
-            height:40px; 
+            width:40px; 
+            height:36px; 
             display:flex; 
             align-items:center; 
             justify-content:center; 
-            border-radius:8px; 
+            border-radius:6px; 
             transition:all 0.2s; 
             font-weight:bold;
+            padding:0;
         }
-        .header-btn:hover { background:rgba(231,76,60,0.1); transform:scale(1.05); }
-        .login-screen { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:999; }
-        .login-form { background:white; padding:30px 20px; border-radius:20px; width:92%; max-width:380px; text-align:center; }
-        .login-form h2 { font-family:'Permanent Marker',cursive; color:#e74c3c; font-size:2.4rem; margin-bottom:18px; }
-        .login-form input { width:100%; padding:14px; font-size:1.3rem; border:2px solid #ffe0e0; border-radius:12px; margin:10px 0; }
-        .login-form button { width:100%; padding:14px; font-size:1.5rem; font-weight:bold; background:var(--accent); color:white; border:none; border-radius:14px; margin-top:14px; cursor:pointer; }
-        .main { display:none; height:100vh; }
-        .content { display:flex; height:100%; }
-        .sidebar { width:90px; background:white; border-right:1px solid #ffe0e0; padding:10px 4px; overflow-y:auto; }
+        .header-btn:hover { background:rgba(231,76,60,0.15); transform:scale(1.05); }
+        .login-screen { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:999; padding:20px; }
+        .login-form { background:white; padding:28px 22px; border-radius:20px; width:94%; max-width:420px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+        .login-form h2 { font-family:'Permanent Marker',cursive; color:#e74c3c; font-size:2.6rem; margin-bottom:12px; }
+        .login-form .description { 
+            font-size:1.15rem; 
+            line-height:1.6; 
+            color:#555; 
+            margin-bottom:22px; 
+            padding:15px; 
+            background:#fff9f9; 
+            border-radius:12px; 
+            border-left:3px solid #ff6b6b;
+        }
+        .login-form p { margin-bottom:16px; font-size:1.25rem; }
+        .login-form input { width:100%; padding:13px; font-size:1.25rem; border:2px solid #ffe0e0; border-radius:12px; margin:10px 0; font-family:system-ui,sans-serif; }
+        .login-form button { width:100%; padding:13px; font-size:1.45rem; font-weight:bold; background:var(--accent); color:white; border:none; border-radius:14px; margin-top:12px; cursor:pointer; box-shadow:0 6px 18px rgba(255,107,107,0.4); }
+        .main { display:none; height:100vh; overflow:hidden; }
+        .content { display:flex; height:calc(100vh - 56px); /* ✅ ВЫЧИТАЕМ ВЫСОТУ ХЕДЕРА */ overflow:hidden; }
+        .sidebar { width:85px; background:white; border-right:1px solid #ffe0e0; padding:10px 4px; overflow-y:auto; }
         
         /* Цветовая индикация статуса задач */
         .date-btn { 
-            padding:8px 3px; 
+            padding:7px 3px; 
             text-align:center; 
             cursor:pointer; 
             border-radius:8px; 
-            font-size:0.75rem; 
+            font-size:0.72rem; 
             margin:3px 0; 
             line-height:1.3; 
             transition:all 0.2s;
@@ -65,75 +80,110 @@
         .date-btn.status-empty { color:#7f8c8d !important; background: transparent !important; }
         .date-btn.status-completed { background:#d4edda !important; color:#155724 !important; font-weight:bold !important; }
         .date-btn.status-incomplete { background:#f8d7da !important; color:#721c24 !important; font-weight:bold !important; }
-        .date-btn.active::before { content: ''; position:absolute; left:0; top:0; bottom:0; width:4px; background:#e74c3c; border-radius:3px 0 0 3px; }
+        .date-btn.active::before { content: ''; position:absolute; left:0; top:0; bottom:0; width:3px; background:#e74c3c; border-radius:2px 0 0 2px; }
         .date-btn.today::after { content:''; position:absolute; bottom:-2px; left:50%; transform:translateX(-50%); width:4px; height:4px; background:var(--accent); border-radius:50%; }
         
-        .tasks-area { flex:1; display:flex; flex-direction:column; }
-        .date-title { font-size:1.4rem; font-weight:bold; margin:16px 0; text-align:center; padding:12px 16px 8px; background:white; border-bottom:1px solid #ffd8d8; }
-        .task-carousel { flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; scroll-behavior:smooth; padding:70px 0 200px; }
-        .task-list { display:flex; flex-direction:column; align-items:center; gap:70px; width:100%; max-width:400px; margin:0 auto; }
-        .task { background:var(--card); border-radius:20px; padding:20px 24px; width:92%; max-width:380px; box-shadow:0 5px 25px rgba(231,76,60,0.15); display:flex; align-items:center; justify-content:space-between; gap:20px; position:relative; scroll-snap-align:center; transition:all 0.5s cubic-bezier(0.22, 1, 0.36, 1); min-height:110px; }
-        .task.active { transform:scale(1.18) !important; box-shadow:0 15px 45px rgba(231,76,60,0.35) !important; opacity:1 !important; }
-        .task:not(.active) { transform:scale(0.76); opacity:0.55; }
-        .delete-btn { position:absolute; top:10px; right:14px; background:none; border:none; font-size:1.8rem; color:#e74c3c; cursor:pointer; opacity:0.85; transition:all .2s; }
-        .delete-btn:hover { opacity:1; transform:scale(1.25); }
+        .tasks-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+        .date-title { font-size:1.35rem; font-weight:bold; margin:14px 0; text-align:center; padding:10px 14px 6px; background:white; border-bottom:1px solid #ffd8d8; position:sticky; top:56px; z-index:100; }
+        .task-carousel { flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; scroll-behavior:smooth; padding:65px 0 180px; }
+        .task-list { display:flex; flex-direction:column; align-items:center; gap:65px; width:100%; max-width:390px; margin:0 auto; padding:0 8px; }
+        .task { background:var(--card); border-radius:18px; padding:18px 22px; width:93%; max-width:370px; box-shadow:0 4px 22px rgba(231,76,60,0.14); display:flex; align-items:center; justify-content:space-between; gap:18px; position:relative; scroll-snap-align:center; transition:all 0.5s cubic-bezier(0.22, 1, 0.36, 1); min-height:105px; }
+        .task.active { transform:scale(1.17) !important; box-shadow:0 14px 42px rgba(231,76,60,0.32) !important; opacity:1 !important; z-index:50; }
+        .task:not(.active) { transform:scale(0.75); opacity:0.52; }
+        .delete-btn { position:absolute; top:9px; right:13px; background:none; border:none; font-size:1.75rem; color:#e74c3c; cursor:pointer; opacity:0.82; transition:all .2s; padding:0; width:28px; height:28px; }
+        .delete-btn:hover { opacity:1; transform:scale(1.22); }
         .task-text { 
             flex:1; 
-            font-size:clamp(1.1rem, 5.5vw, 1.4rem); 
+            font-size:clamp(1.0rem, 5.0vw, 1.3rem); /* ✅ УМЕНЬШЕН ШРИФТ */
             font-weight:500; 
-            line-height:1.5; 
+            line-height:1.52; 
             word-break:break-word; 
             overflow-wrap:break-word;
             hyphens:auto;
-            padding-right:60px; 
+            padding-right:55px; 
             cursor:text; 
             outline:none; 
             text-align:center;
         }
-        .task-text.long { font-size:clamp(1.0rem, 5.0vw, 1.25rem); }
-        .task-text.very-long { font-size:clamp(0.9rem, 4.5vw, 1.1rem); }
-        .task-status { font-size:2.8rem; width:58px; height:58px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .add-btn { position:fixed; bottom:28px; right:28px; width:68px; height:68px; border-radius:50%; background:var(--accent); color:white; font-size:2.8rem; border:none; box-shadow:0 10px 28px rgba(255,107,107,0.45); z-index:100; display:none; cursor:pointer; }
-        .empty { text-align:center; color:#aaa; font-size:1.2rem; padding:70px 20px; }
+        .task-text.long { font-size:clamp(0.95rem, 4.8vw, 1.2rem); }
+        .task-text.very-long { font-size:clamp(0.88rem, 4.5vw, 1.05rem); }
+        .task-status { font-size:2.7rem; width:56px; height:56px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .add-btn { position:fixed; bottom:26px; right:26px; width:66px; height:66px; border-radius:50%; background:var(--accent); color:white; font-size:2.7rem; border:none; box-shadow:0 9px 26px rgba(255,107,107,0.42); z-index:150; display:none; cursor:pointer; transition:all 0.25s; }
+        .add-btn:hover { transform:scale(1.08) rotate(90deg); box-shadow:0 11px 30px rgba(255,107,107,0.5); }
+        .empty { text-align:center; color:#999; font-size:1.15rem; padding:65px 20px; line-height:1.6; }
         
         /* Стили глобальных целей */
-        .goals-modal { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000; display:none; }
-        .goals-content { background:white; border-radius:24px; width:90%; max-width:500px; max-height:80vh; overflow-y:auto; padding:30px; }
-        .goals-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:2px solid #ffe0e0; }
-        .goals-title { font-family:'Permanent Marker',cursive; color:#e74c3c; font-size:2.2rem; }
-        .close-goals { background:none; border:none; font-size:2.5rem; color:#e74c3c; cursor:pointer; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+        .goals-modal { position:fixed; inset:0; background:rgba(0,0,0,0.72); display:flex; align-items:center; justify-content:center; z-index:1000; display:none; }
+        .goals-content { background:white; border-radius:22px; width:92%; max-width:480px; max-height:82vh; overflow-y:auto; padding:26px; }
+        .goals-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:12px; border-bottom:2px solid #ffe0e0; }
+        .goals-title { font-family:'Permanent Marker',cursive; color:#e74c3c; font-size:2.1rem; }
+        .close-goals { background:none; border:none; font-size:2.4rem; color:#e74c3c; cursor:pointer; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
         .close-goals:hover { background:#ffe0e0; transform:rotate(90deg); }
-        .goal-item { background:#fdf6f6; border-radius:16px; padding:18px 45px 18px 50px; margin-bottom:15px; box-shadow:0 3px 15px rgba(0,0,0,0.08); position:relative; min-height:50px; transition:all 0.2s; }
-        .goal-item.completed { background:#d4edda; border-left:4px solid #28a745; }
-        .goal-item:hover { transform:translateX(5px); box-shadow:0 5px 20px rgba(0,0,0,0.12); }
-        .goal-checkbox { position:absolute; left:15px; top:50%; transform:translateY(-50%); width:24px; height:24px; accent-color:#28a745; cursor:pointer; }
-        .goal-text { font-size:1.3rem; line-height:1.5; cursor:text; outline:none; min-height:24px; width:calc(100% - 60px); }
-        .goal-text.completed { text-decoration:line-through; color:#28a745; opacity:0.8; }
-        .goal-text[contenteditable="true"] { background:rgba(255,250,230,0.7); border-radius:8px; padding:4px 8px; }
-        .goal-delete { position:absolute; right:15px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:1.8rem; color:#e74c3c; cursor:pointer; opacity:0.7; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
-        .goal-delete:hover { opacity:1; background:#ffe0e0; transform:translateY(-50%) scale(1.2); }
-        .add-goal-btn { width:100%; padding:14px; background:#ff6b6b; color:white; border:none; border-radius:14px; font-size:1.4rem; font-weight:bold; margin-top:20px; cursor:pointer; transition:all 0.2s; }
-        .add-goal-btn:hover { transform:scale(1.03); box-shadow:0 4px 12px rgba(255,107,107,0.4); }
+        .goal-item { background:#fdf6f6; border-radius:14px; padding:15px 42px 15px 47px; margin-bottom:12px; box-shadow:0 2px 12px rgba(0,0,0,0.07); position:relative; min-height:46px; transition:all 0.2s; }
+        .goal-item.completed { background:#d4edda; border-left:3px solid #28a745; }
+        .goal-item:hover { transform:translateX(4px); box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+        .goal-checkbox { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:22px; height:22px; accent-color:#28a745; cursor:pointer; }
+        .goal-text { 
+            font-size:1.12rem; /* ✅ УМЕНЬШЕН ШРИФТ */
+            line-height:1.5; 
+            cursor:text; 
+            outline:none; 
+            min-height:22px; 
+            width:calc(100% - 58px); 
+        }
+        .goal-text.completed { text-decoration:line-through; color:#28a745; opacity:0.82; }
+        .goal-text[contenteditable="true"] { background:rgba(255,250,230,0.75); border-radius:7px; padding:3px 7px; }
+        .goal-delete { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:1.7rem; color:#e74c3c; cursor:pointer; opacity:0.68; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+        .goal-delete:hover { opacity:1; background:#ffe0e0; transform:translateY(-50%) scale(1.18); }
+        .add-goal-btn { width:100%; padding:13px; background:#ff6b6b; color:white; border:none; border-radius:13px; font-size:1.35rem; font-weight:bold; margin-top:18px; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 14px rgba(255,107,107,0.35); }
+        .add-goal-btn:hover { transform:scale(1.025); box-shadow:0 5px 16px rgba(255,107,107,0.42); }
         
         .task-editing { background:linear-gradient(135deg, #fff9e6, #ffffff); }
-        .task-text[contenteditable="true"] { background:rgba(255,250,230,0.5); border-radius:8px; padding:4px 8px; }
+        .task-text[contenteditable="true"] { background:rgba(255,250,230,0.55); border-radius:7px; padding:4px 7px; }
         
         @media (max-width: 767px) {
-            header { font-size:1.7rem; padding:12px 10px; }
-            .header-btn { font-size:1.3rem; width:45px; }
-            .sidebar { width:80px; padding:8px 3px; }
-            .date-btn { font-size:0.7rem; padding:7px 2px; margin:2px 0; }
-            .goals-content { padding:20px; }
-            .goal-item { padding:15px 40px 15px 45px; }
-            .goal-text { font-size:1.2rem; }
+            header { font-size:1.6rem; padding:10px 8px; }
+            .header-title { font-size:1.55rem; }
+            .header-btn { font-size:1.5rem; width:38px; height:34px; }
+            .sidebar { width:78px; padding:8px 3px; }
+            .date-btn { font-size:0.68rem; padding:6px 2px; margin:2px 0; }
+            .date-title { font-size:1.25rem; padding:9px 12px 5px; top:52px; }
+            .task-carousel { padding:60px 0 165px; }
+            .task-list { gap:60px; }
+            .task { padding:16px 20px; min-height:100px; width:94%; }
+            .task.active { transform:scale(1.15) !important; }
+            .task-status { font-size:2.55rem; width:53px; height:53px; }
+            .delete-btn { font-size:1.65rem; top:8px; right:12px; }
+            .add-btn { width:62px; height:62px; font-size:2.55rem; bottom:24px; right:24px; }
+            .login-form { padding:24px 18px; }
+            .login-form h2 { font-size:2.3rem; }
+            .login-form .description { font-size:1.05rem; padding:12px; margin-bottom:18px; }
+            .login-form input, .login-form button { padding:12px; font-size:1.2rem; }
+            .login-form button { font-size:1.35rem; }
+            .goals-content { padding:22px; }
+            .goal-item { padding:13px 38px 13px 43px; }
+            .goal-text { font-size:1.05rem; }
         }
         @media (max-width: 375px) {
-            .goal-item { padding:12px 35px 12px 40px; font-size:1.1rem; }
+            .header-title { font-size:1.45rem; }
+            .sidebar { width:72px; }
+            .date-btn { font-size:0.65rem; padding:5px 2px; }
+            .task { padding:14px 18px; min-height:95px; font-size:0.95rem; }
+            .goal-item { padding:11px 35px 11px 40px; font-size:0.95rem; }
         }
         @media (min-width: 768px) {
-            .header-btn { font-size:1.5rem; width:55px; }
-            .goals-content { max-width:600px; padding:40px; }
-            .goals-title { font-size:2.6rem; }
+            header { font-size:1.85rem; padding:12px 10px; }
+            .header-btn { font-size:1.65rem; width:42px; height:38px; }
+            .sidebar { width:88px; }
+            .date-title { font-size:1.4rem; top:58px; }
+            .task-carousel { padding:75px 0 210px; }
+            .task-list { gap:70px; max-width:410px; }
+            .task { padding:20px 24px; min-height:110px; width:91%; max-width:390px; }
+            .task.active { transform:scale(1.19) !important; }
+            .task-status { font-size:2.85rem; width:59px; height:59px; }
+            .add-btn { width:70px; height:70px; font-size:2.9rem; bottom:30px; right:30px; }
+            .goals-content { max-width:520px; padding:32px; }
+            .goals-title { font-size:2.4rem; }
         }
     </style>
 </head>
@@ -141,7 +191,14 @@
 <div class="login-screen" id="loginScreen">
     <div class="login-form">
         <h2>My Daily</h2>
-        <p style="margin-bottom:16px">Введите номер телефона</p>
+        <div class="description">
+            📅 Простой ежедневник для управления задачами и целями.<br><br>
+            ✨ Добавляйте задачи на каждый день<br>
+            🎯 Ставьте глобальные цели и отмечайте прогресс<br>
+            📊 Видите статус выполнения по цвету дат<br>
+            📱 Удобно на телефоне и компьютере
+        </div>
+        <p>Введите номер телефона</p>
         <input type="tel" id="phoneInput" placeholder="+375 (__) ___-__-__" autocomplete="tel">
         <button id="loginBtn">Войти / Создать</button>
     </div>
@@ -150,8 +207,8 @@
 <header>
     <div class="header-title">My Daily</div>
     <div class="header-actions">
-        <button class="header-btn" id="goalsBtn" title="Глобальные цели">🎯</button>
-        <button class="header-btn" id="logoutBtn" title="Выйти">Выход</button>
+        <button class="header-btn" id="goalsBtn" title="Глобальные цели">★</button>
+        <button class="header-btn" id="logoutBtn" title="Выйти">✕</button>
     </div>
 </header>
 
@@ -178,7 +235,7 @@
             <button class="close-goals" id="closeGoalsBtn">×</button>
         </div>
         <div id="goalsList">
-            <div class="empty" style="padding:40px 20px">Пока нет глобальных целей</div>
+            <div class="empty" style="padding:35px 20px">Пока нет глобальных целей</div>
         </div>
         <button class="add-goal-btn" id="addGoalBtn">+ Добавить цель</button>
     </div>
@@ -190,6 +247,7 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
 
+    // ✅ УСТАНАВЛИВАЕМ СЕГОДНЯШНЮЮ ДАТУ ПРИ ЗАГРУЗКЕ
     let currentDate = new Date();
     let currentPhone = null;
     let currentTaskIndex = 0;
@@ -221,7 +279,7 @@
         if (!confirm('Выйти из аккаунта?')) return;
         currentPhone = null;
         currentTaskIndex = 0;
-        currentDate = new Date();
+        currentDate = new Date(); // ✅ СБРАСЫВАЕМ НА СЕГОДНЯ ПРИ ВЫХОДЕ
         document.getElementById('mainContent').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('addBtn').style.display = 'none';
@@ -230,7 +288,6 @@
         document.getElementById('dateTitle').textContent = '';
     }
 
-    // ✅ УПРОЩЁННАЯ ЗАГРУЗКА ГЛОБАЛЬНЫХ ЦЕЛЕЙ С ПОНЯТНЫМИ ИНСТРУКЦИЯМИ
     async function loadGlobalGoals() {
         if (!currentPhone) return;
         
@@ -249,13 +306,12 @@
             console.error('Ошибка загрузки глобальных целей:', error);
             const container = document.getElementById('goalsList');
             
-            // ✅ ПОКАЗЫВАЕМ ПОНЯТНУЮ ИНСТРУКЦИЮ
             if (error.message.includes('relation "global_goals" does not exist')) {
                 container.innerHTML = `
-                    <div style="padding:25px; text-align:left; color:#e74c3c; line-height:1.6;">
-                        <h3 style="margin-bottom:15px; font-size:1.4rem; color:#2c3e50;">⚠️ Таблица не создана</h3>
-                        <p style="margin-bottom:15px;">Выполните этот SQL-скрипт в <strong>Supabase → SQL Editor</strong>:</p>
-                        <pre style="background:#f8f9fa; padding:15px; border-radius:8px; font-size:0.85rem; overflow-x:auto; margin-bottom:20px; border-left:4px solid #ff6b6b;">
+                    <div style="padding:22px; text-align:left; color:#e74c3c; line-height:1.55;">
+                        <h3 style="margin-bottom:12px; font-size:1.35rem; color:#2c3e50;">⚠️ Таблица не создана</h3>
+                        <p style="margin-bottom:12px;">Выполните этот SQL-скрипт в <strong>Supabase → SQL Editor</strong>:</p>
+                        <pre style="background:#f9f9f9; padding:12px; border-radius:7px; font-size:0.82rem; overflow-x:auto; margin-bottom:16px; border-left:3px solid #ff6b6b; line-height:1.4;">
 CREATE TABLE IF NOT EXISTS global_goals (
     id BIGSERIAL PRIMARY KEY,
     phone TEXT NOT NULL,
@@ -265,21 +321,21 @@ CREATE TABLE IF NOT EXISTS global_goals (
 );
 ALTER TABLE global_goals DISABLE ROW LEVEL SECURITY;
 CREATE INDEX IF NOT EXISTS idx_global_goals_phone ON global_goals(phone);</pre>
-                        <button onclick="location.reload()" style="background:#ff6b6b; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;">Обновить после создания таблицы</button>
+                        <button onclick="location.reload()" style="background:#ff6b6b; color:white; border:none; padding:9px 18px; border-radius:7px; font-weight:bold; cursor:pointer; width:100%; font-size:1.05rem;">Обновить после создания таблицы</button>
                     </div>
                 `;
             } else if (error.message.includes('column') && error.message.includes('completed')) {
                 container.innerHTML = `
-                    <div style="padding:25px; text-align:left; color:#e74c3c; line-height:1.6;">
-                        <h3 style="margin-bottom:15px; font-size:1.4rem; color:#2c3e50;">⚠️ Не хватает колонки</h3>
-                        <p style="margin-bottom:15px;">Добавьте колонку в таблицу через <strong>Supabase → SQL Editor</strong>:</p>
-                        <pre style="background:#f8f9fa; padding:15px; border-radius:8px; font-size:0.85rem; overflow-x:auto; margin-bottom:20px; border-left:4px solid #ff6b6b;">
+                    <div style="padding:22px; text-align:left; color:#e74c3c; line-height:1.55;">
+                        <h3 style="margin-bottom:12px; font-size:1.35rem; color:#2c3e50;">⚠️ Не хватает колонки</h3>
+                        <p style="margin-bottom:12px;">Добавьте колонку в таблицу через <strong>Supabase → SQL Editor</strong>:</p>
+                        <pre style="background:#f9f9f9; padding:12px; border-radius:7px; font-size:0.82rem; overflow-x:auto; margin-bottom:16px; border-left:3px solid #ff6b6b; line-height:1.4;">
 ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALSE;</pre>
-                        <button onclick="location.reload()" style="background:#ff6b6b; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;">Обновить после добавления колонки</button>
+                        <button onclick="location.reload()" style="background:#ff6b6b; color:white; border:none; padding:9px 18px; border-radius:7px; font-weight:bold; cursor:pointer; width:100%; font-size:1.05rem;">Обновить после добавления колонки</button>
                     </div>
                 `;
             } else {
-                container.innerHTML = `<div class="empty" style="padding:40px 20px">Ошибка: ${error.message}</div>`;
+                container.innerHTML = `<div class="empty" style="padding:35px 20px">Ошибка: ${error.message}</div>`;
             }
         }
     }
@@ -288,7 +344,7 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         const container = document.getElementById('goalsList');
         
         if (globalGoals.length === 0) {
-            container.innerHTML = '<div class="empty" style="padding:40px 20px">Пока нет глобальных целей</div>';
+            container.innerHTML = '<div class="empty" style="padding:35px 20px">Пока нет глобальных целей</div>';
             return;
         }
         
@@ -378,7 +434,6 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         await loadGlobalGoals();
     }
     
-    // ✅ УПРОЩЁННОЕ ДОБАВЛЕНИЕ ЦЕЛИ С ПОНЯТНЫМИ ИНСТРУКЦИЯМИ
     async function addGlobalGoal() {
         const text = prompt('Новая глобальная цель:');
         if (!text || !text.trim()) return;
@@ -417,6 +472,9 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         if (phone.length < 10) return alert('Неверный формат номера');
 
         try {
+            // ✅ СБРАСЫВАЕМ НА СЕГОДНЯ ПРИ ВХОДЕ
+            currentDate = new Date();
+            
             const {  user, error: checkError } = await supabase
                 .from('users')
                 .select('phone')
@@ -434,7 +492,7 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
 
             currentPhone = phone;
             document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'flex';
             document.getElementById('addBtn').style.display = 'block';
 
             try { await loadDates(); } catch (e) { console.error('Ошибка загрузки дат:', e); }
@@ -446,7 +504,6 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         }
     }
 
-    // ✅ ПОЛНОСТЬЮ ИСПРАВЛЕНА ФУНКЦИЯ loadDates
     async function loadDates() {
         const container = document.getElementById('dateList');
         container.innerHTML = '';
@@ -497,6 +554,7 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
                 btn.classList.add('status-empty');
             }
             
+            // ✅ ВЫДЕЛЯЕМ СЕГОДНЯШНЮЮ ДАТУ КАК АКТИВНУЮ
             if (dateStr === formatDateKey(currentDate)) btn.classList.add('active');
             if (dateStr === formatDateKey(new Date())) btn.classList.add('today');
             
@@ -537,13 +595,16 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
             return;
         }
 
-        if (currentTaskIndex >= data.length) currentTaskIndex = data.length - 1;
+        // ✅ ИСПРАВЛЕНО: ПОСЛЕДНЯЯ ЗАДАЧА СТАНОВИТСЯ АКТИВНОЙ
+        if (currentTaskIndex >= data.length) {
+            currentTaskIndex = data.length - 1;
+        }
 
         data.forEach((task, i) => {
             const taskEl = document.createElement('div');
             taskEl.className = 'task';
             taskEl.dataset.index = i;
-            if (i === currentTaskIndex) taskEl.classList.add('active');
+            if (i === currentTaskIndex) taskEl.classList.add('active'); // ✅ ГАРАНТИРОВАННО ДОБАВЛЯЕТСЯ КЛАСС
 
             const delBtn = document.createElement('button');
             delBtn.className = 'delete-btn';
@@ -578,8 +639,8 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
                 const cb = document.createElement('input');
                 cb.type = 'checkbox';
                 cb.checked = false;
-                cb.style.width = '40px';
-                cb.style.height = '40px';
+                cb.style.width = '38px';
+                cb.style.height = '38px';
                 cb.style.accentColor = '#ff6b6b';
                 cb.onchange = async () => {
                     await supabase.from('tasks').update({ completed: true }).eq('id', task.id);
@@ -593,7 +654,10 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
             container.appendChild(taskEl);
         });
 
-        setTimeout(() => scrollToActiveTask(), 100);
+        // ✅ УВЕЛИЧЕННАЯ ЗАДЕРЖКА ДЛЯ КОРРЕКТНОГО СКРОЛЛА
+        setTimeout(() => {
+            scrollToActiveTask();
+        }, 150);
     }
 
     function scrollToActiveTask() {
@@ -601,7 +665,9 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         const tasks = container.querySelectorAll('.task');
         if (tasks.length === 0) return;
         const active = tasks[currentTaskIndex];
-        if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (active) {
+            active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
     document.getElementById('taskCarousel').addEventListener('scroll', () => {
@@ -620,7 +686,7 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         if (closest !== currentTaskIndex) {
             currentTaskIndex = closest;
             tasks.forEach(t => t.classList.remove('active'));
-            tasks[currentTaskIndex].classList.add('active');
+            tasks[currentTaskIndex].classList.add('active'); // ✅ ГАРАНТИРОВАННО ДОБАВЛЯЕТСЯ КЛАСС
         }
     });
 
@@ -696,23 +762,24 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         if (!text || !text.trim()) return;
 
         const dateKey = formatDateKey(currentDate);
-        const { data, error } = await supabase.from('tasks').insert({
+        const { error } = await supabase.from('tasks').insert({
             phone: currentPhone,
             date_key: dateKey,
             text: text.trim(),
             completed: false
-        }).select();
+        });
 
         if (error) {
             alert('Ошибка: ' + error.message);
             return;
         }
 
-        currentTaskIndex = data.length - 1;
-        setTimeout(() => {
-            loadDate();
-            loadDates();
-        }, 100);
+        // ✅ ИСПРАВЛЕНО: УСТАНАВЛИВАЕМ ИНДЕКС НА ПОСЛЕДНЮЮ ЗАДАЧУ
+        currentTaskIndex = 999; // Большое число, чтобы в loadDate установился на последнюю
+        
+        // ✅ БЕЗ ЗАДЕРЖКИ - СРАЗУ ЗАГРУЖАЕМ
+        loadDate();
+        loadDates();
     }
 
     document.getElementById('loginBtn').addEventListener('click', login);
