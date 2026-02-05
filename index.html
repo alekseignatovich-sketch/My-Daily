@@ -85,8 +85,21 @@
         
         .tasks-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
         .date-title { font-size:1.35rem; font-weight:bold; margin:14px 0; text-align:center; padding:10px 14px 6px; background:white; border-bottom:1px solid #ffd8d8; position:sticky; top:56px; z-index:100; }
-        .task-carousel { flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; scroll-behavior:smooth; padding:65px 0 40px; /* ✅ МИНИМАЛЬНЫЙ НИЖНИЙ ОТСТУП */ }
+        .task-carousel { flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; scroll-behavior:smooth; padding:65px 0 120px; /* ✅ УМЕНЬШЕН НИЖНИЙ ОТСТУП */ }
         .task-list { display:flex; flex-direction:column; align-items:center; gap:65px; width:100%; max-width:390px; margin:0 auto; padding:0 8px; min-height:100%; }
+        .empty-space { 
+            height:80px; 
+            width:100%; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            color:#aaa; 
+            font-size:1.1rem; 
+            opacity:0.7;
+            cursor:pointer;
+            transition: opacity 0.3s;
+        }
+        .empty-space:hover { opacity:1; }
         .task { background:var(--card); border-radius:18px; padding:18px 22px; width:93%; max-width:370px; box-shadow:0 4px 22px rgba(231,76,60,0.14); display:flex; align-items:center; justify-content:space-between; gap:18px; position:relative; scroll-snap-align:center; transition:all 0.5s cubic-bezier(0.22, 1, 0.36, 1); min-height:105px; }
         .task.active { transform:scale(1.17) !important; box-shadow:0 14px 42px rgba(231,76,60,0.32) !important; opacity:1 !important; z-index:50; }
         .task:not(.active) { transform:scale(0.75); opacity:0.52; }
@@ -109,29 +122,6 @@
         .task-text.very-long { font-size:clamp(0.88rem, 4.5vw, 1.05rem); }
         .task-status { font-size:2.7rem; width:56px; height:56px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .empty { text-align:center; color:#999; font-size:1.15rem; padding:65px 20px; line-height:1.6; }
-        
-        /* ✅ КОМПАКТНАЯ КНОПКА + */
-        .add-btn { 
-            position:fixed; 
-            bottom:24px; 
-            right:24px; 
-            width:58px; 
-            height:58px; 
-            border-radius:50%; 
-            background:var(--accent); 
-            color:white; 
-            font-size:2.4rem; 
-            border:none; 
-            box-shadow:0 7px 22px rgba(255,107,107,0.45); 
-            z-index:150; 
-            display:none; 
-            cursor:pointer; 
-            transition:all 0.25s; 
-        }
-        .add-btn:hover { 
-            transform:scale(1.1) rotate(90deg); 
-            box-shadow:0 9px 26px rgba(255,107,107,0.55); 
-        }
         
         /* Стили глобальных целей */
         .goals-modal { position:fixed; inset:0; background:rgba(0,0,0,0.72); display:flex; align-items:center; justify-content:center; z-index:1000; display:none; }
@@ -169,19 +159,12 @@
             .sidebar { width:78px; padding:8px 3px; }
             .date-btn { font-size:0.68rem; padding:6px 2px; margin:2px 0; }
             .date-title { font-size:1.25rem; padding:9px 12px 5px; top:52px; }
-            .task-carousel { padding:60px 0 30px; }
+            .task-carousel { padding:60px 0 100px; }
             .task-list { gap:60px; }
             .task { padding:16px 20px; min-height:100px; width:94%; }
             .task.active { transform:scale(1.15) !important; }
             .task-status { font-size:2.55rem; width:53px; height:53px; }
             .delete-btn { font-size:1.65rem; top:8px; right:12px; }
-            .add-btn { 
-                width:52px; 
-                height:52px; 
-                font-size:2.2rem; 
-                bottom:20px; 
-                right:20px; 
-            }
             .login-form { padding:24px 18px; }
             .login-form h2 { font-size:2.3rem; }
             .login-form .description { font-size:1.05rem; padding:12px; margin-bottom:18px; }
@@ -196,13 +179,6 @@
             .sidebar { width:72px; }
             .date-btn { font-size:0.65rem; padding:5px 2px; }
             .task { padding:14px 18px; min-height:95px; font-size:0.95rem; }
-            .add-btn { 
-                width:48px; 
-                height:48px; 
-                font-size:2.0rem; 
-                bottom:18px; 
-                right:18px; 
-            }
             .goal-item { padding:11px 35px 11px 40px; font-size:0.95rem; }
         }
         @media (min-width: 768px) {
@@ -210,18 +186,11 @@
             .header-btn { font-size:1.65rem; width:42px; height:38px; }
             .sidebar { width:88px; }
             .date-title { font-size:1.4rem; top:58px; }
-            .task-carousel { padding:75px 0 45px; }
+            .task-carousel { padding:75px 0 140px; }
             .task-list { gap:70px; max-width:410px; }
             .task { padding:20px 24px; min-height:110px; width:91%; max-width:390px; }
             .task.active { transform:scale(1.19) !important; }
             .task-status { font-size:2.85rem; width:59px; height:59px; }
-            .add-btn { 
-                width:64px; 
-                height:64px; 
-                font-size:2.7rem; 
-                bottom:28px; 
-                right:28px; 
-            }
             .goals-content { max-width:520px; padding:32px; }
             .goals-title { font-size:2.4rem; }
         }
@@ -233,7 +202,7 @@
         <h2>My Daily</h2>
         <div class="description">
             📅 Простой ежедневник для управления задачами и целями.<br><br>
-            ✨ Добавляйте задачи на каждый день — нажмите кнопку «+» в правом нижнем углу.<br>
+            ✨ Добавляйте задачи на каждый день — кликните на пустое место ниже списка задач или сделайте долгое нажатие на дату в календаре.<br>
             🎯 Ставьте глобальные цели и отмечайте прогресс.<br>
             📊 Видите статус выполнения по цвету дат.<br>
             📱 Удобно на телефоне и компьютере.
@@ -261,13 +230,11 @@
             <div class="date-title" id="dateTitle"></div>
             <div class="task-carousel" id="taskCarousel">
                 <div id="taskList" class="task-list"></div>
+                <div class="empty-space" id="addTaskArea">➕ Добавить задачу</div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- ✅ КОМПАКТНАЯ КНОПКА + БЕЗ ЛИШНЕГО ПРОСТРАНСТВА -->
-<button class="add-btn" id="addBtn">+</button>
 
 <div class="goals-modal" id="goalsModal">
     <div class="goals-content">
@@ -294,6 +261,7 @@
     let isEditing = false;
     let isGoalEditing = false;
     let globalGoals = [];
+    let longPressTimer = null;
 
     const dayNames = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
@@ -322,7 +290,6 @@
         currentDate = new Date();
         document.getElementById('mainContent').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('addBtn').style.display = 'none';
         document.getElementById('dateList').innerHTML = '';
         document.getElementById('taskList').innerHTML = '';
         document.getElementById('dateTitle').textContent = '';
@@ -532,7 +499,6 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
             currentPhone = phone;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainContent').style.display = 'flex';
-            document.getElementById('addBtn').style.display = 'block';
 
             try { await loadDates(); } catch (e) { console.error('Ошибка загрузки дат:', e); }
             try { await loadDate(); } catch (e) { console.error('Ошибка загрузки задач:', e); }
@@ -596,6 +562,26 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
             if (dateStr === formatDateKey(currentDate)) btn.classList.add('active');
             if (dateStr === formatDateKey(new Date())) btn.classList.add('today');
             
+            // ✅ ДОЛГОЕ НАЖАТИЕ ДЛЯ ДОБАВЛЕНИЯ ЗАДАЧИ
+            btn.addEventListener('touchstart', (e) => {
+                longPressTimer = setTimeout(() => {
+                    currentDate = date;
+                    currentTaskIndex = 0;
+                    document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    addTask();
+                }, 500);
+            });
+            
+            btn.addEventListener('touchend', () => {
+                clearTimeout(longPressTimer);
+            });
+            
+            btn.addEventListener('touchmove', () => {
+                clearTimeout(longPressTimer);
+            });
+            
+            // Для ПК — клик для выбора даты
             btn.onclick = () => {
                 currentDate = date;
                 currentTaskIndex = 0;
@@ -629,7 +615,8 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         container.innerHTML = '';
 
         if (!data || data.length === 0) {
-            container.innerHTML = '<div class="empty">Пока задач нет 😌</div>';
+            // ✅ ПОКАЗЫВАЕМ ПОДСКАЗКУ ЕСЛИ ЗАДАЧ НЕТ
+            container.innerHTML = '<div class="empty">Пока задач нет 😌<br><small style="display:block;margin-top:10px;color:#aaa">Кликните ниже для добавления</small></div>';
             return;
         }
 
@@ -793,7 +780,7 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         }
     }
 
-    // ✅ ДОБАВЛЕНИЕ ЗАДАЧИ ПО КНОПКЕ +
+    // ✅ ДОБАВЛЕНИЕ ЗАДАЧИ ПО КЛИКУ НА ПУСТОЕ МЕСТО
     async function addTask() {
         const text = prompt('Новая задача:');
         if (!text || !text.trim()) return;
@@ -816,8 +803,10 @@ ALTER TABLE global_goals ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT FALS
         loadDates();
     }
 
+    // ✅ ОБРАБОТЧИК КЛИКА НА ПУСТОЕ МЕСТО
+    document.getElementById('addTaskArea').addEventListener('click', addTask);
+
     document.getElementById('loginBtn').addEventListener('click', login);
-    document.getElementById('addBtn').addEventListener('click', addTask); // ✅ КНОПКА + РАБОТАЕТ
     document.getElementById('phoneInput').addEventListener('keypress', e => {
         if (e.key === 'Enter') login();
     });
