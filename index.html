@@ -22,16 +22,9 @@
             --spacing:   clamp(1rem, 4vw, 2.5rem);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
 
-        html {
-            font-size: 100%;
-            scroll-behavior: smooth;
-        }
+        html { font-size: 100%; scroll-behavior: smooth; }
 
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -56,22 +49,16 @@
             z-index: 10;
         }
 
-        .header-title {
-            flex: 1;
-        }
+        .header-title { flex: 1; }
 
-        .header-actions {
-            display: flex;
-            gap: 10px;
-        }
+        .header-actions { display: flex; gap: 10px; }
 
         .header-btn {
             background: none;
             border: none;
             font-size: clamp(1.3rem, 4vw, 1.6rem);
             color: var(--red);
-            width: 44px;
-            height: 44px;
+            width: 44px; height: 44px;
             border-radius: 12px;
             cursor: pointer;
             display: grid;
@@ -86,7 +73,6 @@
             transform: scale(1.08);
         }
 
-        /* ─── LOGIN ──────────────────────────────────────────────── */
         .login-screen {
             position: fixed;
             inset: 0;
@@ -139,16 +125,9 @@
             box-shadow: 0 8px 24px rgba(255,107,107,0.4);
         }
 
-        /* ─── MAIN LAYOUT ────────────────────────────────────────── */
-        .main {
-            display: none;
-            height: 100vh;
-        }
+        .main { display: none; height: 100vh; }
 
-        .content {
-            display: flex;
-            height: 100%;
-        }
+        .content { display: flex; height: 100%; }
 
         .sidebar {
             width: 80px;
@@ -159,11 +138,7 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .tasks-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
+        .tasks-area { flex: 1; display: flex; flex-direction: column; }
 
         .date-title {
             font-size: clamp(1.3rem, 5vw, 1.6rem);
@@ -172,7 +147,6 @@
             padding: 16px 20px 12px;
             background: white;
             border-bottom: 1px solid var(--red-light);
-            color: var(--text);
         }
 
         .task-carousel {
@@ -242,10 +216,7 @@
             transition: all 0.2s;
         }
 
-        .delete-btn:hover {
-            opacity: 1;
-            transform: scale(1.2);
-        }
+        .delete-btn:hover { opacity: 1; transform: scale(1.2); }
 
         .task-text {
             flex: 1;
@@ -260,8 +231,8 @@
             outline: none;
         }
 
-        .task-text.long       { font-size: clamp(1.05rem, 4.5vw, 1.28rem); }
-        .task-text.very-long  { font-size: clamp(0.98rem, 4.2vw, 1.18rem); }
+        .task-text.long      { font-size: clamp(1.05rem, 4.5vw, 1.28rem); }
+        .task-text.very-long { font-size: clamp(0.98rem, 4.2vw, 1.18rem); }
 
         .task-status {
             font-size: 2.6rem;
@@ -294,7 +265,6 @@
             transform: scale(1.08) translateY(-4px);
         }
 
-        /* ─── DATE BUTTONS ───────────────────────────────────────── */
         .date-btn {
             padding: 10px 6px;
             text-align: center;
@@ -307,13 +277,12 @@
             position: relative;
         }
 
-        .date-btn.status-empty    { color: var(--gray); }
+        .date-btn.status-empty     { color: var(--gray); }
         .date-btn.status-completed { background: #d4edda; color: #155724; font-weight: 600; }
         .date-btn.status-incomplete{ background: #f8d7da; color: #721c24; font-weight: 600; }
-        .date-btn.active::before  { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--red); border-radius:0 4px 4px 0; }
-        .date-btn.today::after    { content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:5px; height:5px; background:var(--accent); border-radius:50%; }
+        .date-btn.active::before   { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--red); border-radius:0 4px 4px 0; }
+        .date-btn.today::after     { content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:5px; height:5px; background:var(--accent); border-radius:50%; }
 
-        /* ─── GOALS MODAL ────────────────────────────────────────── */
         .goals-modal {
             position: fixed;
             inset: 0;
@@ -457,7 +426,6 @@
             padding: 80px 24px;
         }
 
-        /* ─── RESPONSIVE ─────────────────────────────────────────── */
         @media (min-width: 640px) {
             .sidebar { width: 100px; padding: 16px 8px; }
             .date-btn { font-size: 0.9rem; padding: 12px 8px; margin: 6px 0; }
@@ -484,7 +452,7 @@
     <div class="login-form">
         <h2>My Daily</h2>
         <p style="margin: 1rem 0 1.5rem; color:#555;">Введите номер телефона</p>
-        <input type="tel" id="phoneInput" placeholder="+376 (__) ___-__-__" autocomplete="tel">
+        <input type="tel" id="phoneInput" placeholder="+375 (__) ___-__-__" autocomplete="tel">
         <button id="loginBtn">Войти / Создать</button>
     </div>
 </div>
@@ -526,25 +494,508 @@
     </div>
 </div>
 
-<script type="module">
-    // ──────────────────────────────────────────────────────────────
-    // Ваш существующий JavaScript-код остаётся без изменений
-    // (я его не трогаю, чтобы не сломать логику)
-    // Просто вставьте его сюда вместо этого комментария
-    // ──────────────────────────────────────────────────────────────
+<!-- ────────────────────────────────────────────────────────────── -->
+<!--                         JAVASCRIPT                            -->
+<!-- ────────────────────────────────────────────────────────────── -->
 
+<script type="module">
     const SUPABASE_URL = 'https://qkhvvrwccubbufffiary.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraHZ2cndjY3ViYnVmZmZpYXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzQ1NzgsImV4cCI6MjA4NTM1MDU3OH0.0MBZApkMoLIhnQqKtQnfO8nyke9uTBqy21tYxBELJsI';
+
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
 
-    // ... весь остальной ваш код (login, loadDates, loadDate, addTask и т.д.) ...
-    // Просто скопируйте его сюда без изменений
+    let currentDate = new Date();
+    let currentPhone = null;
+    let currentTaskIndex = 0;
+    let isEditing = false;
+    let isGoalEditing = false;
+    let globalGoals = [];
+    const dayNames = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
-    // Для удобства оставляю только точки подключения событий:
+    function formatDateKey(date) {
+        const d = new Date(date);
+        return d.toISOString().split('T')[0];
+    }
+
+    function formatDateDisplay(date) {
+        return date.toLocaleDateString('ru', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+
+    function formatDateShort(date) {
+        const d = new Date(date);
+        const day = d.getDate();
+        const month = d.toLocaleDateString('ru', { month: 'short' });
+        const dayOfWeek = d.getDay();
+        const dayName = dayNames[dayOfWeek];
+        return `${day} ${month}. (${dayName})`;
+    }
+
+    function logout() {
+        if (!confirm('Выйти из аккаунта?')) return;
+        currentPhone = null;
+        currentTaskIndex = 0;
+        currentDate = new Date();
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('addBtn').style.display = 'none';
+        document.getElementById('dateList').innerHTML = '';
+        document.getElementById('taskList').innerHTML = '';
+        document.getElementById('dateTitle').textContent = '';
+    }
+
+    async function loadGlobalGoals() {
+        if (!currentPhone) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('global_goals')
+                .select('id, text, completed')
+                .eq('phone', currentPhone)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            globalGoals = data || [];
+            renderGlobalGoals();
+        } catch (error) {
+            console.error('Ошибка загрузки глобальных целей:', error);
+            const container = document.getElementById('goalsList');
+
+            if (error.message.includes('relation "global_goals" does not exist')) {
+                container.innerHTML = `
+                    <div style="padding:25px; text-align:left; color:#e74c3c; line-height:1.6;">
+                        <h3 style="margin-bottom:15px; font-size:1.4rem; color:#2c3e50;">⚠️ Таблица не создана</h3>
+                        <p style="margin-bottom:15px;">Выполните этот SQL-скрипт в <strong>Supabase → SQL Editor</strong>:</p>
+                        <pre style="background:#f8f9fa; padding:15px; border-radius:8px; font-size:0.85rem; overflow-x:auto; margin-bottom:20px; border-left:4px solid #ff6b6b;">
+CREATE TABLE IF NOT EXISTS global_goals (
+    id BIGSERIAL PRIMARY KEY,
+    phone TEXT NOT NULL,
+    text TEXT NOT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+ALTER TABLE global_goals DISABLE ROW LEVEL SECURITY;
+CREATE INDEX IF NOT EXISTS idx_global_goals_phone ON global_goals(phone);</pre>
+                        <button onclick="location.reload()" style="background:#ff6b6b; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;">Обновить после создания таблицы</button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `<div class="empty" style="padding:40px 20px">Ошибка: ${error.message}</div>`;
+            }
+        }
+    }
+
+    function renderGlobalGoals() {
+        const container = document.getElementById('goalsList');
+
+        if (globalGoals.length === 0) {
+            container.innerHTML = '<div class="empty" style="padding:40px 20px">Пока нет глобальных целей</div>';
+            return;
+        }
+
+        container.innerHTML = globalGoals.map(goal => {
+            const isCompleted = goal.completed || false;
+            return `
+                <div class="goal-item ${isCompleted ? 'completed' : ''}" data-id="${goal.id}">
+                    <input type="checkbox" class="goal-checkbox" ${isCompleted ? 'checked' : ''}>
+                    <div class="goal-text ${isCompleted ? 'completed' : ''}" contenteditable="false">${goal.text || 'Новая цель'}</div>
+                    <button class="goal-delete">×</button>
+                </div>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.goal-checkbox').forEach((checkbox, index) => {
+            checkbox.addEventListener('change', () => toggleGlobalGoalComplete(globalGoals[index].id, checkbox.checked));
+        });
+
+        document.querySelectorAll('.goal-delete').forEach((btn, index) => {
+            btn.addEventListener('click', () => deleteGlobalGoal(globalGoals[index].id));
+        });
+
+        document.querySelectorAll('.goal-text').forEach((textEl, index) => {
+            textEl.addEventListener('click', (e) => {
+                if (!isGoalEditing && !globalGoals[index].completed) {
+                    startEditingGoal(textEl, globalGoals[index]);
+                }
+            });
+        });
+    }
+
+    function startEditingGoal(textElement, goal) {
+        if (isGoalEditing) return;
+
+        const originalText = textElement.textContent;
+        textElement.contentEditable = true;
+        textElement.classList.add('editing');
+        isGoalEditing = true;
+
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(textElement);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        const finishEditing = async () => {
+            const newText = textElement.textContent.trim();
+            textElement.contentEditable = false;
+            textElement.classList.remove('editing');
+            isGoalEditing = false;
+
+            if (newText === '') {
+                if (confirm('Удалить цель?')) {
+                    await deleteGlobalGoal(goal.id);
+                } else {
+                    textElement.textContent = originalText;
+                }
+            } else if (newText !== originalText) {
+                await supabase.from('global_goals').update({ text: newText }).eq('id', goal.id);
+                await loadGlobalGoals();
+            }
+        };
+
+        textElement.addEventListener('blur', finishEditing, { once: true });
+        textElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                finishEditing();
+            } else if (e.key === 'Escape') {
+                textElement.textContent = originalText;
+                textElement.contentEditable = false;
+                textElement.classList.remove('editing');
+                isGoalEditing = false;
+            }
+        }, { once: true });
+    }
+
+    async function toggleGlobalGoalComplete(goalId, completed) {
+        await supabase.from('global_goals').update({ completed }).eq('id', goalId);
+        await loadGlobalGoals();
+    }
+
+    async function deleteGlobalGoal(goalId) {
+        if (!confirm('Удалить цель?')) return;
+        await supabase.from('global_goals').delete().eq('id', goalId);
+        await loadGlobalGoals();
+    }
+
+    async function addGlobalGoal() {
+        const text = prompt('Новая глобальная цель:');
+        if (!text || !text.trim()) return;
+
+        try {
+            const { error } = await supabase.from('global_goals').insert({
+                phone: currentPhone,
+                text: text.trim(),
+                completed: false
+            });
+
+            if (error) throw error;
+            await loadGlobalGoals();
+        } catch (error) {
+            console.error('Ошибка добавления цели:', error);
+            alert('Ошибка: ' + error.message);
+        }
+    }
+
+    async function login() {
+        const phoneInput = document.getElementById('phoneInput').value.trim();
+        if (!phoneInput) return alert('Введите номер телефона');
+
+        let phone = phoneInput.replace(/\D/g, '');
+        if (phone.startsWith('8')) phone = '7' + phone.slice(1);
+        phone = '+' + phone;
+
+        if (phone.length < 10) return alert('Неверный формат номера');
+
+        try {
+            const { data: user, error: checkError } = await supabase
+                .from('users')
+                .select('phone')
+                .eq('phone', phone)
+                .single();
+
+            if (checkError && checkError.code === 'PGRST116') {
+                const { error: insertError } = await supabase.from('users').insert({ phone });
+                if (insertError && insertError.code !== '23505') {
+                    throw insertError;
+                }
+            } else if (checkError) {
+                throw checkError;
+            }
+
+            currentPhone = phone;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('addBtn').style.display = 'block';
+
+            await loadDates();
+            await loadDate();
+            await loadGlobalGoals();
+        } catch (error) {
+            console.error('Ошибка входа:', error);
+            alert('Ошибка: ' + (error.message || error));
+        }
+    }
+
+    async function loadDates() {
+        const container = document.getElementById('dateList');
+        container.innerHTML = '';
+
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('date_key, completed')
+            .eq('phone', currentPhone)
+            .order('date_key');
+
+        if (error) {
+            console.error('Ошибка загрузки дат:', error);
+            return;
+        }
+
+        const dateStatus = {};
+        if (data && Array.isArray(data)) {
+            data.forEach(task => {
+                if (!dateStatus[task.date_key]) dateStatus[task.date_key] = { completed: 0, total: 0 };
+                dateStatus[task.date_key].total++;
+                if (task.completed) dateStatus[task.date_key].completed++;
+            });
+        }
+
+        const dates = new Set();
+        for (let i = -14; i <= 14; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() + i);
+            dates.add(formatDateKey(d));
+        }
+
+        [...dates].sort().forEach(dateStr => {
+            const date = new Date(dateStr);
+            const btn = document.createElement('div');
+            btn.className = 'date-btn';
+            btn.textContent = formatDateShort(date);
+
+            const status = dateStatus[dateStr];
+            if (status) {
+                if (status.completed === status.total) btn.classList.add('status-completed');
+                else btn.classList.add('status-incomplete');
+            } else {
+                btn.classList.add('status-empty');
+            }
+
+            if (dateStr === formatDateKey(currentDate)) btn.classList.add('active');
+            if (dateStr === formatDateKey(new Date())) btn.classList.add('today');
+
+            btn.onclick = () => {
+                currentDate = date;
+                currentTaskIndex = 0;
+                document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                loadDate();
+            };
+
+            container.appendChild(btn);
+        });
+    }
+
+    async function loadDate() {
+        const dateKey = formatDateKey(currentDate);
+        document.getElementById('dateTitle').textContent = formatDateDisplay(currentDate);
+
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('phone', currentPhone)
+            .eq('date_key', dateKey)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Ошибка загрузки задач:', error);
+            document.getElementById('taskList').innerHTML = '<div class="empty">Ошибка загрузки</div>';
+            return;
+        }
+
+        const container = document.getElementById('taskList');
+        container.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="empty">Пока задач нет 😌</div>';
+            return;
+        }
+
+        if (currentTaskIndex >= data.length) currentTaskIndex = data.length - 1;
+
+        data.forEach((task, i) => {
+            const taskEl = document.createElement('div');
+            taskEl.className = 'task';
+            taskEl.dataset.index = i;
+            if (i === currentTaskIndex) taskEl.classList.add('active');
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.textContent = '×';
+            delBtn.onclick = async e => {
+                e.stopPropagation();
+                if (confirm('Удалить задачу?')) {
+                    await supabase.from('tasks').delete().eq('id', task.id);
+                    if (currentTaskIndex >= data.length - 1 && currentTaskIndex > 0) currentTaskIndex--;
+                    loadDate();
+                    loadDates();
+                }
+            };
+            taskEl.appendChild(delBtn);
+
+            const textSpan = document.createElement('div');
+            textSpan.className = 'task-text';
+            textSpan.textContent = task.text;
+            if (task.text.length > 50) textSpan.classList.add('long');
+            if (task.text.length > 100) textSpan.classList.add('very-long');
+            textSpan.dataset.taskId = task.id;
+            textSpan.onclick = (e) => {
+                e.stopPropagation();
+                if (!isEditing) startEditing(textSpan, task);
+            };
+
+            const status = document.createElement('div');
+            status.className = 'task-status';
+            if (task.completed) {
+                status.textContent = '👍';
+            } else {
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = false;
+                cb.style.width = '40px';
+                cb.style.height = '40px';
+                cb.style.accentColor = '#ff6b6b';
+                cb.onchange = async () => {
+                    await supabase.from('tasks').update({ completed: true }).eq('id', task.id);
+                    loadDate();
+                    loadDates();
+                };
+                status.appendChild(cb);
+            }
+
+            taskEl.append(textSpan, status);
+            container.appendChild(taskEl);
+        });
+
+        setTimeout(() => scrollToActiveTask(), 100);
+    }
+
+    function scrollToActiveTask() {
+        const container = document.getElementById('taskList');
+        const tasks = container.querySelectorAll('.task');
+        if (tasks.length === 0) return;
+        const active = tasks[currentTaskIndex];
+        if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    document.getElementById('taskCarousel').addEventListener('scroll', () => {
+        const tasks = document.querySelectorAll('.task');
+        if (tasks.length === 0) return;
+
+        let closest = 0;
+        let minDist = Infinity;
+
+        tasks.forEach((task, idx) => {
+            const rect = task.getBoundingClientRect();
+            const dist = Math.abs(rect.top + rect.height / 2 - window.innerHeight / 2);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = idx;
+            }
+        });
+
+        if (closest !== currentTaskIndex) {
+            currentTaskIndex = closest;
+            tasks.forEach(t => t.classList.remove('active'));
+            tasks[currentTaskIndex].classList.add('active');
+        }
+    });
+
+    function startEditing(textElement, task) {
+        const originalText = textElement.textContent;
+        textElement.contentEditable = true;
+        textElement.classList.add('editing');
+        textElement.closest('.task').classList.add('task-editing');
+        isEditing = true;
+
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(textElement);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        const finishEditingFunc = async () => {
+            const newText = textElement.textContent.trim();
+            textElement.contentEditable = false;
+            textElement.classList.remove('editing');
+            textElement.closest('.task').classList.remove('task-editing');
+            isEditing = false;
+
+            if (newText === '') {
+                if (confirm('Удалить задачу?')) {
+                    await supabase.from('tasks').delete().eq('id', task.id);
+                    loadDate();
+                    loadDates();
+                } else {
+                    textElement.textContent = originalText;
+                }
+            } else if (newText !== originalText) {
+                await supabase.from('tasks').update({ text: newText }).eq('id', task.id);
+                textElement.className = 'task-text';
+                if (newText.length > 50) textElement.classList.add('long');
+                if (newText.length > 100) textElement.classList.add('very-long');
+                loadDates();
+            }
+        };
+
+        const keyHandler = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                finishEditingFunc();
+            } else if (e.key === 'Escape') {
+                textElement.textContent = originalText;
+                finishEditingFunc();
+            }
+        };
+
+        textElement.addEventListener('keydown', keyHandler);
+        textElement.addEventListener('blur', finishEditingFunc, { once: true });
+    }
+
+    async function addTask() {
+        const text = prompt('Новая задача:');
+        if (!text || !text.trim()) return;
+
+        const dateKey = formatDateKey(currentDate);
+        const { data, error } = await supabase.from('tasks').insert({
+            phone: currentPhone,
+            date_key: dateKey,
+            text: text.trim(),
+            completed: false
+        }).select();
+
+        if (error) {
+            alert('Ошибка: ' + error.message);
+            return;
+        }
+
+        currentTaskIndex = data.length - 1;
+        setTimeout(() => {
+            loadDate();
+            loadDates();
+        }, 100);
+    }
+
+    // ─── Привязка всех событий ────────────────────────────────────
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('addBtn').addEventListener('click', addTask);
-    document.getElementById('phoneInput').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+    document.getElementById('phoneInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') login();
+    });
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('goalsBtn').addEventListener('click', () => {
         document.getElementById('goalsModal').style.display = 'flex';
@@ -554,7 +1005,7 @@
         document.getElementById('goalsModal').style.display = 'none';
     });
     document.getElementById('addGoalBtn').addEventListener('click', addGlobalGoal);
-    document.getElementById('goalsModal').addEventListener('click', e => {
+    document.getElementById('goalsModal').addEventListener('click', (e) => {
         if (e.target === document.getElementById('goalsModal')) {
             document.getElementById('goalsModal').style.display = 'none';
         }
