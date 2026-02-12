@@ -49,28 +49,60 @@
             z-index: 10;
         }
 
-        .header-title { flex: 1; }
+        .header-title { 
+            flex: 1; 
+            margin: 0 40px; /* Отступ для кнопок */
+        }
 
-        .header-actions { display: flex; gap: 10px; }
+        .header-actions { 
+            display: flex; 
+            gap: 6px; 
+            margin-left: auto; /* Прижимаем к правому краю заголовка */
+        }
 
         .header-btn {
             background: none;
             border: none;
-            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            font-size: clamp(1.2rem, 3.8vw, 1.5rem);
             color: var(--red);
-            width: 44px; height: 44px;
-            border-radius: 12px;
+            width: 38px; 
+            height: 38px;
+            border-radius: 10px;
             cursor: pointer;
-            display: grid;
-            place-items: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s;
             touch-action: manipulation;
+            position: relative;
+            font-weight: bold;
         }
 
         .header-btn:hover,
         .header-btn:focus-visible {
             background: rgba(231,76,60,0.12);
             transform: scale(1.08);
+        }
+
+        /* Счетчик целей */
+        .goal-counter {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--red);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: bold;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            z-index: 11;
+            line-height: 1;
         }
 
         .login-screen {
@@ -460,8 +492,11 @@
 <header>
     <div class="header-title">My Daily</div>
     <div class="header-actions">
-        <button class="header-btn" id="goalsBtn" title="Глобальные цели">🎯</button>
-        <button class="header-btn" id="logoutBtn" title="Выйти">Выход</button>
+        <div class="goal-btn-container">
+            <button class="header-btn" id="goalsBtn" title="Глобальные цели">★</button>
+            <span class="goal-counter" id="goalCounter">0</span>
+        </div>
+        <button class="header-btn" id="logoutBtn" title="Выйти">✕</button>
     </div>
 </header>
 
@@ -493,10 +528,6 @@
         <button class="add-goal-btn" id="addGoalBtn">+ Добавить цель</button>
     </div>
 </div>
-
-<!-- ────────────────────────────────────────────────────────────── -->
-<!--                         JAVASCRIPT                            -->
-<!-- ────────────────────────────────────────────────────────────── -->
 
 <script type="module">
     const SUPABASE_URL = 'https://qkhvvrwccubbufffiary.supabase.co';
@@ -531,6 +562,14 @@
         return `${day} ${month}. (${dayName})`;
     }
 
+    // ✅ ОБНОВЛЕНИЕ СЧЕТЧИКА ЦЕЛЕЙ
+    function updateGoalCounter() {
+        const incompleteCount = globalGoals.filter(goal => !goal.completed).length;
+        document.getElementById('goalCounter').textContent = incompleteCount || '';
+        // Скрываем счетчик если нет незавершенных целей
+        document.getElementById('goalCounter').style.display = incompleteCount > 0 ? 'flex' : 'none';
+    }
+
     function logout() {
         if (!confirm('Выйти из аккаунта?')) return;
         currentPhone = null;
@@ -542,6 +581,8 @@
         document.getElementById('dateList').innerHTML = '';
         document.getElementById('taskList').innerHTML = '';
         document.getElementById('dateTitle').textContent = '';
+        document.getElementById('goalCounter').textContent = '0';
+        document.getElementById('goalCounter').style.display = 'none';
     }
 
     async function loadGlobalGoals() {
@@ -558,6 +599,7 @@
 
             globalGoals = data || [];
             renderGlobalGoals();
+            updateGoalCounter(); // ✅ ОБНОВЛЯЕМ СЧЕТЧИК
         } catch (error) {
             console.error('Ошибка загрузки глобальных целей:', error);
             const container = document.getElementById('goalsList');
@@ -671,13 +713,13 @@ CREATE INDEX IF NOT EXISTS idx_global_goals_phone ON global_goals(phone);</pre>
 
     async function toggleGlobalGoalComplete(goalId, completed) {
         await supabase.from('global_goals').update({ completed }).eq('id', goalId);
-        await loadGlobalGoals();
+        await loadGlobalGoals(); // ✅ ОБНОВЛЯЕМ СЧЕТЧИК
     }
 
     async function deleteGlobalGoal(goalId) {
         if (!confirm('Удалить цель?')) return;
         await supabase.from('global_goals').delete().eq('id', goalId);
-        await loadGlobalGoals();
+        await loadGlobalGoals(); // ✅ ОБНОВЛЯЕМ СЧЕТЧИК
     }
 
     async function addGlobalGoal() {
@@ -692,7 +734,7 @@ CREATE INDEX IF NOT EXISTS idx_global_goals_phone ON global_goals(phone);</pre>
             });
 
             if (error) throw error;
-            await loadGlobalGoals();
+            await loadGlobalGoals(); // ✅ ОБНОВЛЯЕМ СЧЕТЧИК
         } catch (error) {
             console.error('Ошибка добавления цели:', error);
             alert('Ошибка: ' + error.message);
@@ -732,7 +774,7 @@ CREATE INDEX IF NOT EXISTS idx_global_goals_phone ON global_goals(phone);</pre>
 
             await loadDates();
             await loadDate();
-            await loadGlobalGoals();
+            await loadGlobalGoals(); // ✅ ЗАГРУЖАЕМ ЦЕЛИ И СЧЕТЧИК
         } catch (error) {
             console.error('Ошибка входа:', error);
             alert('Ошибка: ' + (error.message || error));
